@@ -116,9 +116,39 @@ not a transcription of anyone's official palette.
 | S | `#51CF66` | `--piece-s` |
 | T | `#CC5DE8` | `--piece-t` |
 | Z | `#FF6B6B` | `--piece-z` |
-| Ghost | `rgba(244,245,247,0.16)` | `--piece-ghost` |
-| Grid line | `rgba(255,255,255,0.06)` | `--board-grid` |
+| Ghost outline | `rgba(244,245,247,0.34)` | `--piece-ghost-line` |
+| Ghost fill | `rgba(244,245,247,0.05)` | `--piece-ghost-fill` |
+| Grid line | `rgba(255,255,255,0.09)` | `--board-grid` |
 | Board well | `#0A0B0E` | `--board-well` |
+| Board frame | `rgba(255,255,255,0.14)` | `--board-frame` |
+| Cell bevel — light edge | `rgba(255,255,255,0.34)` | `--cell-bevel-light` |
+| Cell bevel — dark edge | `rgba(0,0,0,0.34)` | `--cell-bevel-dark` |
+| Well recess | `inset 0 2px 10px rgba(0,0,0,0.55)` | `--board-recess` |
+
+**Every locked or falling cell is bevelled** — light edge top-left, dark edge
+bottom-right, 2px at cell sizes ≥20px and 1px below that:
+
+```css
+.cell {
+  border-radius: 2px;
+  box-shadow: inset 2px 2px 0 var(--cell-bevel-light),
+              inset -2px -2px 0 var(--cell-bevel-dark);
+}
+```
+
+This is not decoration. Flat fills separated only by a 1px grid line make two
+same-coloured cells read as one shape, and §2's measurements show the hue pairs
+cannot carry that separation themselves (T vs Z is **1.20:1**). The bevel gives every
+cell an edge that survives both problems, and it works with colour ignored — so it
+also helps `FR-26`. Reasoning and rejected alternatives: ADR-0009.
+
+**The ghost is an outline, not a fill** — `inset 0 0 0 2px` in
+`--piece-ghost-line` over `--piece-ghost-fill`. A translucent filled ghost reads as a
+locked block; an outline reads as a target.
+
+**The board sits in a framed well**: a `--board-well` container with a 1px
+`--board-frame` border, `--board-recess` inside it, and 6px of padding before the
+grid. Without a visible frame the playfield does not separate from the page ground.
 
 Measured against the well `#0A0B0E` — all seven clear 3:1 for graphical objects:
 I **9.90** · J **4.55** · L **8.81** · O **12.23** · S **9.81** · T **5.90** · Z **7.09**.
@@ -163,6 +193,21 @@ Scale — `rem` on a 16px root:
 | `--text-sm` | 0.875rem / 1.45 | HUD captions, table meta |
 | `--text-xs` | 0.75rem / 1.4 | **non-essential only** — never the sole carrier of meaning |
 
+Letter-spacing has exactly three values. Anything else is drift:
+
+| Token | Value | Usage |
+| --- | --- | --- |
+| `--track-label` | `0.08em` | uppercase labels, small caps, keycaps |
+| `--track-title` | `0.16em` | uppercase screen and modal titles |
+| `--track-wordmark` | `0.22em` | the `TETRIS` wordmark only |
+
+Body text and buttons get **no** letter-spacing.
+
+**Keyboard hints are not keycaps.** The `.keycap` component (§7) is a 44×44 hit target
+for rebinding a key in Settings. A hint chip in the play screen's footer is a label:
+compact, `--text-xs`, no `border-bottom-width`, no 44px floor, and no `cursor: pointer`.
+Styling a hint like a keycap makes an unclickable label look pressable.
+
 ---
 
 ## §4 Spacing — kept from step 1
@@ -187,8 +232,13 @@ mechanical; a Tetris cell with an 8px radius stops reading as a grid cell.
 
 ## §5 Elevation — lightness, not shadow
 
-Depth comes from surface lightness plus a 1px border. There is exactly **one** shadow
-token, for modals, where a cast shadow does real separation work:
+**Scope: chrome only.** The playfield is content, not chrome, and it is exempt — the
+cell bevels and the well recess (§2) are shadows doing separation work that lightness
+cannot do at a 24px cell. Everything below governs HUD, menus, panels, tables and
+buttons, where the rule stands unchanged.
+
+Depth comes from surface lightness plus a 1px border. Outside the board there is
+exactly **one** shadow token, for modals, where a cast shadow does real separation work:
 
 ```css
 --shadow-modal: 0 16px 48px rgba(0, 0, 0, 0.64);
@@ -377,6 +427,13 @@ row disappears with no animation (`NFR-A11Y-05`). Never a layout-shifting hover.
 
 - ❌ Any saturated colour on chrome — it collides with the piece hues (§1)
 - ❌ `--color-danger` on the board — top-out is frame + desaturation, never red
+- ❌ **Flat cells.** A cell without its bevel merges with the same-coloured cell next
+  to it — the hues cannot separate themselves (§2)
+- ❌ **A filled ghost.** Translucent fill reads as a locked block; the ghost is an
+  outline (§2)
+- ❌ **An unframed board.** Without the `--board-frame` border and the well recess the
+  playfield does not separate from the page ground (§2)
+- ❌ Cast shadows on chrome — the board's bevels are the only exception (§5)
 - ❌ Proportional digits on a value that changes while visible (§3)
 - ❌ Colour as the only carrier of meaning (`NFR-A11Y-06`, `FR-26`)
 - ❌ Touch controls overlapping the playfield (§6)
