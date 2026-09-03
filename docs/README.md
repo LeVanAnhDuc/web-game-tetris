@@ -1,4 +1,4 @@
-# Tài liệu dự án `web-game/web-game-tetris`
+# Tài liệu dự án `web-game-tetris`
 
 ## Bản đồ
 
