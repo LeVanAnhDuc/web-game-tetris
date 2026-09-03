@@ -118,7 +118,7 @@ not a transcription of anyone's official palette.
 | Z | `#FF6B6B` | `--piece-z` |
 | Ghost outline | `rgba(244,245,247,0.34)` | `--piece-ghost-line` |
 | Ghost fill | `rgba(244,245,247,0.05)` | `--piece-ghost-fill` |
-| Grid line | `rgba(255,255,255,0.09)` | `--board-grid` |
+| Grid line | `rgba(255,255,255,0.05)` | `--board-grid` |
 | Board well | `#0A0B0E` | `--board-well` |
 | Board frame | `rgba(255,255,255,0.14)` | `--board-frame` |
 | Cell bevel — light edge | `rgba(255,255,255,0.34)` | `--cell-bevel-light` |
@@ -149,6 +149,12 @@ locked block; an outline reads as a target.
 **The board sits in a framed well**: a `--board-well` container with a 1px
 `--board-frame` border, `--board-recess` inside it, and 6px of padding before the
 grid. Without a visible frame the playfield does not separate from the page ground.
+
+The grid line was `0.09` when this section was first written and is `0.05` now. At a
+38px cell that value turned an empty board into a bright achromatic mesh that competed
+with the piece colours -- against §1. The frame and the bevels carry the separation;
+the grid only has to delineate cells. Changed after looking at the running app, not
+from the token table.
 
 Measured against the well `#0A0B0E` — all seven clear 3:1 for graphical objects:
 I **9.90** · J **4.55** · L **8.81** · O **12.23** · S **9.81** · T **5.90** · Z **7.09**.

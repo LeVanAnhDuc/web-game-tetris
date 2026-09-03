@@ -1,0 +1,556 @@
+/*
+ * Design tokens, transcribed from docs/design-system/tetris/MASTER.md.
+ * That file is the source; this one is the implementation. Do not invent a value
+ * here -- add it there first, with its measured contrast.
+ */
+
+:root {
+  /* §2 chrome -- achromatic. No saturated colour outside the board. */
+  --color-ground: #0e0f13;
+  --color-surface: #16181f;
+  --color-surface-raised: #1e212b;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-hover: rgba(255, 255, 255, 0.16);
+  --color-text: #f4f5f7;
+  --color-text-muted: #a0a4ae;
+  --color-text-disabled: #6b7080;
+  --color-ring: #ffffff;
+  --color-action: #f4f5f7;
+  --color-on-action: #0e0f13;
+  --color-danger: #e5484d;
+  --color-danger-text: #eb6e72;
+
+  /* §2 playfield */
+  --board-well: #0a0b0e;
+  --board-frame: rgba(255, 255, 255, 0.14);
+  --board-recess: inset 0 2px 10px rgba(0, 0, 0, 0.55);
+
+  /* §3 type */
+  --font-ui: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', monospace;
+  --text-hud-xl: 2.5rem;
+  --text-hud: 1.5rem;
+  --text-lg: 1.25rem;
+  --text-base: 1rem;
+  --text-sm: 0.875rem;
+  --text-xs: 0.75rem;
+  --track-label: 0.08em;
+  --track-title: 0.16em;
+  --track-wordmark: 0.22em;
+
+  /* §4 spacing and radius */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --radius-cell: 2px;
+  --radius-control: 4px;
+  --radius-panel: 8px;
+
+  /* §5 the one chrome shadow */
+  --shadow-modal: 0 16px 48px rgba(0, 0, 0, 0.64);
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-ground);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+/* §7 one focus rule for everything. The offset is load-bearing: without it the
+   white ring is invisible on the white .btn-primary fill (1.09:1). */
+:where(button, a, input, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* §8 minimal motion tier. Game feel is the engine's job, not CSS. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation: none !important;
+  }
+}
+
+.label {
+  font: 500 var(--text-xs) / 1.4 var(--font-ui);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.value {
+  font: 600 var(--text-hud) / 1.1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.value--xl {
+  font-size: var(--text-hud-xl);
+  line-height: 1;
+}
+
+.value--sm {
+  font-size: var(--text-base);
+  line-height: 1.2;
+}
+
+/* §7 buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: 44px;
+  padding: 12px 24px;
+  border-radius: var(--radius-control);
+  font: 700 var(--text-base) / 1 var(--font-ui);
+  cursor: pointer;
+  transition: opacity 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+
+.btn--primary {
+  background: var(--color-action);
+  color: var(--color-on-action);
+  border: 0;
+}
+.btn--primary:hover {
+  opacity: 0.88;
+}
+
+.btn--secondary {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+.btn--secondary:hover {
+  border-color: var(--color-border-hover);
+  background: var(--color-surface);
+}
+
+.btn--danger {
+  background: transparent;
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger);
+}
+.btn--danger:hover {
+  background: rgba(229, 72, 77, 0.12);
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  color: var(--color-text-disabled);
+  border-color: var(--color-border);
+  background: transparent;
+  cursor: not-allowed;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  border-radius: var(--radius-control);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 150ms ease, background-color 150ms ease;
+}
+.icon-btn:hover {
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+.icon-btn:disabled,
+.icon-btn[aria-disabled='true'] {
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+.icon-btn:disabled:hover,
+.icon-btn[aria-disabled='true']:hover {
+  background: transparent;
+}
+
+/* ---------------------------------------------------------------- app shell
+   §6: three screens, no landing page. Mobile 375 first; wider widths follow. */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  height: 56px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--color-border);
+  flex: 0 0 auto;
+}
+
+.topbar__stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.topbar__grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* At 375 the top bar carries score and level only -- three stat columns squeeze
+   the labels into one illegible run. */
+.topbar__stack--wide {
+  display: none;
+}
+
+/* The wordmark only exists where there is room for it: the approved mockup has it
+   at 1440 and not at 375, where the score has to be the first thing read. */
+.wordmark {
+  display: none;
+  flex: 1 1 auto;
+  font: 700 var(--text-base) / 1 var(--font-ui);
+  letter-spacing: var(--track-wordmark);
+  color: var(--color-text);
+}
+
+.strip {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
+  flex: 0 0 auto;
+}
+
+.strip__col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* An empty hold slot must still be visible, or the label floats above nothing. */
+.slot {
+  padding: var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  align-self: flex-start;
+  line-height: 0;
+}
+
+.queue {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-sm);
+}
+
+.main {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  min-height: 0;
+  padding: var(--space-xs) var(--space-md);
+}
+
+.rail {
+  display: none;
+}
+
+/* NO padding here. The canvas is sized from this element's box, and
+   getBoundingClientRect returns the BORDER box -- padding would be counted as space
+   the canvas can use and then overflow it. Spacing lives on .main instead. */
+.board-area {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  min-height: 0;
+}
+
+/* §2 the board sits in a framed, recessed well -- without the frame it does not
+   separate from the page ground. */
+.well {
+  padding: 6px;
+  background: var(--board-well);
+  border: 1px solid var(--board-frame);
+  border-radius: 6px;
+  box-shadow: var(--board-recess);
+  line-height: 0;
+}
+
+.touchband {
+  flex: 0 0 auto;
+  display: flex;
+  gap: var(--space-md);
+  padding: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.touchband__cluster {
+  flex: 1 1 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
+}
+
+/* §9: touch targets never below 44px. These are 56 to leave room for a thumb. */
+.padbtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  color: var(--color-text);
+  font: 600 var(--text-sm) / 1 var(--font-mono);
+  letter-spacing: var(--track-label);
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  transition: background-color 150ms ease;
+}
+.padbtn:active {
+  background: var(--color-surface-raised);
+}
+.padbtn--wide {
+  grid-column: span 2;
+}
+
+.hints {
+  display: none;
+}
+
+/* ------------------------------------------------------------------- modals */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 11, 14, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  z-index: 10;
+}
+
+.modal {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-modal);
+  padding: var(--space-xl);
+  width: min(90vw, 480px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.modal__title {
+  font: 700 var(--text-lg) / 1.3 var(--font-ui);
+  letter-spacing: var(--track-title);
+  text-transform: uppercase;
+  text-align: center;
+  margin: 0;
+}
+
+.modal__body {
+  font: 500 var(--text-sm) / 1.5 var(--font-ui);
+  color: var(--color-text-muted);
+  text-align: center;
+  margin: 0;
+}
+
+.modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.statrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.statlist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  font: 700 var(--text-sm) / 1 var(--font-ui);
+  letter-spacing: var(--track-label);
+  color: var(--color-text);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------- 768: rails appear */
+
+@media (min-width: 768px) {
+  .topbar {
+    gap: var(--space-xl);
+    padding: 0 var(--space-md);
+  }
+
+  .topbar__stack--wide {
+    display: flex;
+  }
+
+  .strip {
+    display: none;
+  }
+
+  .rail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    width: 180px;
+    padding: var(--space-lg);
+    flex: 0 0 auto;
+  }
+
+  /* §1: these two rules ARE the board's own edges, continued through the HUD. */
+  .rail--left {
+    border-right: 1px solid var(--color-border);
+  }
+  .rail--right {
+    border-left: 1px solid var(--color-border);
+  }
+
+  /* Shrink-to-fit, so the rails sit HARD AGAINST the board: at 768 and up those
+     two borders are the board's own edges continued through the HUD, which is the
+     design's signature (MASTER.md §1). Safe now only because the canvas is sized
+     from `.main`, not from this element. */
+  .board-area {
+    flex: 0 0 auto;
+  }
+
+  .main {
+    padding: 0;
+  }
+
+  .queue {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+
+  /* Seven actions, seven columns. Six wrapped the last button onto its own row. */
+  .touchband {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: var(--space-sm);
+    padding: var(--space-md);
+  }
+
+  .touchband__cluster {
+    display: contents;
+  }
+
+  .padbtn--wide {
+    grid-column: auto;
+  }
+}
+
+/* ------------------------------- 1024+: keyboard is the point, touch goes away */
+
+@media (min-width: 1024px) {
+  .wordmark {
+    display: block;
+  }
+
+  .rail {
+    width: 236px;
+  }
+
+  .touchband {
+    display: none;
+  }
+
+  .hints {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xl);
+    height: 48px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .hint {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  /* A hint is a LABEL, not a keycap: no 44px floor, no pressable styling, no
+     pointer cursor. MASTER.md §3 says so explicitly. */
+  .hint__key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    font: 600 var(--text-xs) / 1 var(--font-mono);
+    color: var(--color-text);
+  }
+
+  .hint__what {
+    font: 500 var(--text-sm) / 1 var(--font-ui);
+    color: var(--color-text-muted);
+  }
+}
