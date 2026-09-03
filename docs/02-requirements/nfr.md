@@ -2,7 +2,7 @@
 
 > **Trả lời:** Ngưỡng nào áp cho **mọi** feature, để không phải nhắc lại từng lần?
 > **Trạng thái:** 🟢 đủ
-> **Cập nhật:** 2026-09-03 · commit 0010a0f
+> **Cập nhật:** 2026-09-03 · commit d171af7
 > **Cập nhật khi:** thêm loại tài nguyên mới · thêm nhóm người dùng · sau sự cố sinh ra ngưỡng mới
 
 <!-- CÁCH ĐIỀN

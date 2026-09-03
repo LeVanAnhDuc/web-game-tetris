@@ -2,7 +2,7 @@
 
 > **Trả lời:** Sản phẩm này là gì, cho ai, và **KHÔNG** làm gì?
 > **Trạng thái:** 🟢 đủ
-> **Cập nhật:** 2026-09-03 · commit 0010a0f
+> **Cập nhật:** 2026-09-03 · commit d171af7
 > **Cập nhật khi:** định vị đổi · thêm/bớt một Non-Goal · trần chi phí đổi
 
 <!-- CÁCH ĐIỀN

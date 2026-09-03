@@ -2,7 +2,7 @@
 
 > **Trả lời:** Hệ thống có những chức năng nào, mỗi cái đang ở trạng thái gì?
 > **Trạng thái:** 🟢 đủ
-> **Cập nhật:** 2026-09-03 · commit 0010a0f
+> **Cập nhật:** 2026-09-03 · commit d171af7
 > **Cập nhật khi:** brainstorm ra chức năng mới (cấp FR mới) · một FR chuyển trạng thái
 
 <!-- CÁCH ĐIỀN

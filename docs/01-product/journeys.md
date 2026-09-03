@@ -2,7 +2,7 @@
 
 > **Trả lời:** Người dùng đi qua những luồng nào từ đầu đến cuối?
 > **Trạng thái:** 🟢 đủ
-> **Cập nhật:** 2026-09-03 · commit 0010a0f
+> **Cập nhật:** 2026-09-03 · commit d171af7
 > **Cập nhật khi:** có luồng người dùng mới · một luồng cũ đổi bản chất
 
 <!-- CÁCH ĐIỀN

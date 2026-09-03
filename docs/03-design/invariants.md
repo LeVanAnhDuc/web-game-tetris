@@ -2,7 +2,7 @@
 
 > **Trả lời:** Sửa gì thì hệ thống sai **âm thầm** — test vẫn xanh mà kết quả vẫn sai?
 > **Trạng thái:** 🟢 đủ
-> **Cập nhật:** 2026-09-03 · commit 0010a0f
+> **Cập nhật:** 2026-09-03 · commit d171af7
 > **Cập nhật khi:** phát hiện một bất biến mới — thường là ngay sau khi ai đó vừa phá nó
 
 <!-- CÁCH ĐIỀN

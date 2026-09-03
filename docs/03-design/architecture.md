@@ -2,7 +2,7 @@
 
 > **Trả lời:** Hệ thống ghép lại thế nào, ranh giới giữa các phần ở đâu?
 > **Trạng thái:** 🟢 đủ
-> **Cập nhật:** 2026-09-03 · commit 0010a0f
+> **Cập nhật:** 2026-09-03 · commit d171af7
 > **Cập nhật khi:** thêm/bỏ một module hoặc service · đổi cách hai module nói chuyện
 
 <!-- CÁCH ĐIỀN
