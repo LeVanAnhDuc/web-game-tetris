@@ -8,7 +8,13 @@
 <!-- BEGIN:auto — bảng dưới do .claude/scripts/docs-regen.sh sinh từ các file ADR. Đừng sửa tay. -->
 | ID | Tiêu đề | Ngày | Trạng thái |
 | --- | --- | --- | --- |
-| — | _chưa có ADR nào_ | — | — |
+| [ADR-0001](0001-use-vite-react-typescript.md) | Dùng Vite + React + TypeScript, npm, deploy tĩnh | 2026-09-03 | accepted |
+| [ADR-0002](0002-keep-game-engine-pure-and-deterministic.md) | Giữ engine luật chơi thuần khiết và deterministic | 2026-09-03 | accepted |
+| [ADR-0003](0003-canvas-2d-with-fixed-timestep-loop-outside-react.md) | Vẽ bàn chơi bằng Canvas 2D, vòng lặp fixed-timestep chạy ngoài React | 2026-09-03 | accepted |
+| [ADR-0004](0004-async-storage-identity-interfaces-defer-ducker-id.md) | Đặt storage và identity sau interface async, hoãn tích hợp Ducker ID | 2026-09-03 | accepted |
+| [ADR-0005](0005-compute-das-arr-inside-engine.md) | Tính DAS/ARR trong engine, không ở tầng input | 2026-09-03 | accepted |
+| [ADR-0006](0006-hand-rolled-i18n-layer.md) | Tự viết lớp i18n mỏng thay vì dùng thư viện | 2026-09-03 | accepted |
+| [ADR-0007](0007-copy-claude-dir-into-worktrees.md) | Copy `.claude/` vào worktree, và xoá bản copy sau khi merge | 2026-09-03 | accepted |
 <!-- END:auto -->
 
 Trạng thái: `accepted` · `superseded by ADR-00xx` · `deprecated`

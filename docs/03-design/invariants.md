@@ -1,8 +1,8 @@
 # Bất biến chịu lực
 
 > **Trả lời:** Sửa gì thì hệ thống sai **âm thầm** — test vẫn xanh mà kết quả vẫn sai?
-> **Trạng thái:** 🟡 mặc định đề xuất, chưa rà theo dự án
-> **Cập nhật:** — · commit —
+> **Trạng thái:** 🟢 đủ
+> **Cập nhật:** 2026-09-03 · commit d171af7
 > **Cập nhật khi:** phát hiện một bất biến mới — thường là ngay sau khi ai đó vừa phá nó
 
 <!-- CÁCH ĐIỀN
@@ -22,13 +22,15 @@ KHÔNG chứa: quy ước format/naming (-> lint config), kiến trúc (-> archi
 
 | # | Bất biến | Vi phạm thì sao |
 | --- | --- | --- |
-| 1 | Thời gian lưu ở **UTC**. Đổi múi giờ chỉ xảy ra ở tầng hiển thị | Lệch một ngày ở biên múi giờ. Test viết theo giờ máy vẫn xanh |
-| 2 | Mọi mutation kiểm quyền ở **server**, kể cả khi UI đã ẩn nút | Người dùng gọi API trực tiếp và sửa được dữ liệu của người khác |
-| 3 | Chỉ tầng service truy vấn datastore. Route/handler không query trực tiếp | Bỏ qua lớp kiểm quyền và validate nằm trong service |
-| 4 | Tiền và số cần chính xác **không dùng float** | Sai số tích luỹ, không tái tạo được, phát hiện sau nhiều tháng |
-| 5 | Bản ghi đang được tham chiếu thì **soft-delete**, không hard-delete | Dữ liệu tham chiếu mồ côi, báo cáo cũ thiếu dòng |
-| 6 | Tác vụ ghi quan trọng phải **idempotent** theo một khoá | Retry hoặc double-click tạo bản ghi trùng |
-| 7 | Migration **chỉ tiến**. Không sửa migration đã chạy ở bất kỳ môi trường nào | Lịch sử schema giữa các môi trường lệch nhau, không hoà giải được |
-| 8 | Thứ tự middleware: **auth → validate → handler** | Handler nhận dữ liệu chưa validate, hoặc validate chạy khi chưa biết người gọi |
-| 9 | Không tin `id` gửi từ client để xác định quyền sở hữu. Luôn đối chiếu với session | Truy cập chéo dữ liệu giữa các người dùng |
-| 10 | <!-- TODO: bất biến riêng của dự án này --> | |
+| 1 | `engine/` **thuần khiết**: không `Date.now()`, không `performance.now()`, không `Math.random()`, không DOM. Thời gian và RNG được inject | Replay không tái tạo được, test flaky theo máy, và mất luôn đường validate điểm ở server về sau |
+| 2 | Engine tiến theo **tick nguyên**, không theo `deltaTime` | Người màn 144Hz chơi game khác người màn 60Hz. Test không có màn hình nên vẫn xanh |
+| 3 | React state **không** điều khiển vòng lặp mỗi frame. HUD nhận cập nhật ở nhịp thấp | Rớt frame vì GC, chỉ lộ trên máy yếu và chỉ ở cấp độ cao |
+| 4 | DAS/ARR đếm **trong engine**; `input/` chỉ phát press/release | Auto-repeat phụ thuộc timer của browser, replay lệch dần theo thời gian |
+| 5 | Wall kick: thử offset đúng thứ tự bảng SRS và lấy kết quả thành công **đầu tiên** | Phần lớn nước xoay vẫn đúng; chỉ vài kick đặc thù sai — chơi thử không phát hiện được |
+| 6 | Một `bag` cho một lượt chơi. Không tạo lại giữa các khối | Phân phối trông đúng trong test ngắn, nhưng chuỗi khối dài bị sai |
+| 7 | `lastMove` và `lastKickIndex` phải được cập nhật ở **mọi** nhánh của `reduce` | T-spin nhận sai, và luôn sai theo hướng có lợi cho người chơi |
+| 8 | `moveResets` cap **15** | Người chơi stall vô hạn, lượt chơi không bao giờ kết thúc |
+| 9 | Board là 10×**40**. Mọi kiểm tra biên dùng hằng `VISIBLE_ROWS`, không rải số `20` | Điều kiện block-out/lock-out sai ở biên trên đỉnh — chỗ khó phát hiện nhất |
+| 10 | Mọi chuỗi hiển thị đi qua `t()`. Hai file locale cùng tập key | Đổi ngôn ngữ xong vẫn còn vài chỗ tiếng cũ; không ai thấy nếu chỉ test một locale |
+| 11 | Thời điểm lưu ở **UTC**; đổi múi giờ chỉ ở tầng hiển thị | Ngày của điểm cao lệch một ngày ở biên múi giờ |
+| 12 | `SettingsRepository` đọc dữ liệu cũ phải **migrate theo `schemaVersion`**, không ghi đè | Thiết lập của người chơi bị xoá sạch sau một lần deploy |
