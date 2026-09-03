@@ -15,6 +15,8 @@
 | [ADR-0005](0005-compute-das-arr-inside-engine.md) | Tính DAS/ARR trong engine, không ở tầng input | 2026-09-03 | accepted |
 | [ADR-0006](0006-hand-rolled-i18n-layer.md) | Tự viết lớp i18n mỏng thay vì dùng thư viện | 2026-09-03 | accepted |
 | [ADR-0007](0007-copy-claude-dir-into-worktrees.md) | Copy `.claude/` vào worktree, và xoá bản copy sau khi merge | 2026-09-03 | accepted |
+| [ADR-0008](0008-achromatic-chrome-board-only-colour.md) | Chrome phi sắc, màu chỉ tồn tại trong bàn chơi | 2026-09-03 | accepted |
+| [ADR-0009](0009-bevelled-cells-and-framed-well.md) | Ô bàn chơi có vát cạnh, ghost là đường viền, bàn chơi nằm trong khung well | 2026-09-03 | accepted |
 <!-- END:auto -->
 
 Trạng thái: `accepted` · `superseded by ADR-00xx` · `deprecated`

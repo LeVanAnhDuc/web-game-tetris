@@ -2,7 +2,7 @@
 
 > **Trả lời:** Đang làm gì, tiếp theo làm gì, và đang nợ những gì?
 > **Trạng thái:** 🟢 đủ
-> **Cập nhật:** 2026-09-03 · commit b26bfab
+> **Cập nhật:** 2026-09-03 · commit 4fc9aae
 > **Cập nhật khi:** bắt đầu/kết thúc một việc · brainstorm ra việc mới · cố ý đi đường tắt
 
 <!-- CÁCH ĐIỀN
@@ -24,21 +24,26 @@ KHÔNG chứa: tính năng ngoài phạm vi (-> 01-product/overview.md §Non-Goa
 `scope` FR-01→FR-34 · `nfr` viết lại · `invariants` viết lại · `architecture`);
 viết ADR-0001→ADR-0006.
 
-Remote đã có: `github.com/LeVanAnhDuc/web-game-tetris` (public). `main` và
-`docs/project-foundation` đều đã push; **PR #1** đang mở cho branch này.
+Remote: `github.com/LeVanAnhDuc/web-game-tetris` (public). Hai PR đang mở, **xếp
+lớp**: **PR #1** `docs/project-foundation` → `main` (tier-1 + ADR-0001→0007), và
+**PR #2** `docs/design-system` → `docs/project-foundation` (MASTER.md + ADR-0008).
+Merge #1 trước, GitHub sẽ tự trỏ #2 về `main`.
 
-**Dừng ở bước:** chờ review PR #1. **Chưa có một dòng code nào.**
+Bài toán worktree đã giải: `.claude/scripts/worktree-new.sh` / `worktree-done.sh`
+copy `.claude/` vào worktree và chặn xoá nếu bản copy lệch (ADR-0007). Đã chạy thử
+cả hai chiều. Worktree `design-system` đang mở tại `.worktrees/design-system/`.
 
-**Đang chặn:** không có gì chặn việc review. Nhưng trước khi bắt đầu code thì phải
-giải xong việc đầu tiên ở §Việc tiếp theo — `.claude/` bị gitignore nên worktree sẽ
-không có skill và hook.
+**Dừng ở bước:** `feature-flow` cho `core-gameplay` — bước 1, mockup gate. ASCII
+wireframe đã trình trong hội thoại, **chờ duyệt trước khi mở canvas**.
+**Vẫn chưa có một dòng code nào.**
+
+**Đang chặn:** không có gì chặn kỹ thuật. Đang chờ hai thứ từ người dùng: duyệt
+wireframe, và merge PR #1 → #2.
 
 ## Việc tiếp theo
 
 | Việc | Liên quan | Ưu tiên | Vì sao ưu tiên đó |
 | --- | --- | --- | --- |
-| Giải bài toán `.claude/` không có trong worktree | — | cao | `feature-flow` bước 3 buộc build trong worktree, nhưng `.claude/` bị `.gitignore` nên worktree không có skill và không có 4 hook. Hướng khả thi trên Windows: junction/symlink. Phải xong **trước** khi build feature đầu tiên |
-| Chạy `design-bootstrap` | — | cao | sinh `docs/design-system/tetris/MASTER.md`. Chưa có file này thì không được mở canvas mockup |
 | Feature `core-gameplay` | FR-01 → FR-22 | cao | vòng lặp cốt lõi; mọi feature khác phụ thuộc vào engine của nó |
 | Feature `controls-settings` | FR-23 → FR-30 | trung bình | người chơi mục tiêu coi việc chỉnh DAS/ARR là bắt buộc |
 | Feature `stats-highscores` | FR-31 → FR-34 | trung bình | cần `LocalIdentity` và `ScoreRepository` |
