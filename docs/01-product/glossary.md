@@ -2,7 +2,7 @@
 
 > **Trả lời:** Khái niệm này gọi là gì trong code, và hiện ra sao trên UI?
 > **Trạng thái:** 🟡 một phần
-> **Cập nhật:** 2026-09-03 · commit —
+> **Cập nhật:** 2026-09-03 · commit a5a5e33
 > **Cập nhật khi:** xuất hiện một khái niệm nghiệp vụ mới trong code hoặc UI
 
 <!-- CÁCH ĐIỀN
