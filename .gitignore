@@ -1,5 +1,9 @@
 /.claude/
 
+# Worktree của feature. `.claude/` bị ignore nên worktree không checkout được nó;
+# .claude/scripts/worktree-new.sh copy vào, worktree-done.sh xoá đi. Xem ADR-0007.
+/.worktrees/
+
 # Bí mật — `.env.example` là bản mẫu và ĐƯỢC commit; `.env` là bản thật và không bao giờ commit.
 .env
 .env.*

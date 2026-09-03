@@ -14,6 +14,7 @@
 | [ADR-0004](0004-async-storage-identity-interfaces-defer-ducker-id.md) | Đặt storage và identity sau interface async, hoãn tích hợp Ducker ID | 2026-09-03 | accepted |
 | [ADR-0005](0005-compute-das-arr-inside-engine.md) | Tính DAS/ARR trong engine, không ở tầng input | 2026-09-03 | accepted |
 | [ADR-0006](0006-hand-rolled-i18n-layer.md) | Tự viết lớp i18n mỏng thay vì dùng thư viện | 2026-09-03 | accepted |
+| [ADR-0007](0007-copy-claude-dir-into-worktrees.md) | Copy `.claude/` vào worktree, và xoá bản copy sau khi merge | 2026-09-03 | accepted |
 <!-- END:auto -->
 
 Trạng thái: `accepted` · `superseded by ADR-00xx` · `deprecated`
