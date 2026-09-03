@@ -1,0 +1,6 @@
+/.claude/
+
+# Bí mật — `.env.example` là bản mẫu và ĐƯỢC commit; `.env` là bản thật và không bao giờ commit.
+.env
+.env.*
+!.env.example
