@@ -24,13 +24,14 @@ KHÔNG chứa: tính năng ngoài phạm vi (-> 01-product/overview.md §Non-Goa
 `scope` FR-01→FR-34 · `nfr` viết lại · `invariants` viết lại · `architecture`);
 viết ADR-0001→ADR-0006.
 
-**Dừng ở bước:** chờ người dùng review bộ tài liệu này trước khi chuyển sang
-`superpowers:writing-plans`. **Chưa có một dòng code nào.**
+Remote đã có: `github.com/LeVanAnhDuc/web-game-tetris` (public). `main` và
+`docs/project-foundation` đều đã push; **PR #1** đang mở cho branch này.
 
-**Đang chặn:** chưa quyết có tạo repo GitHub remote hay không — repo hiện không có
-`origin`, nên yêu cầu "branch từ `origin/main` mới nhất" của `CLAUDE.md` không thực
-hiện được. GitHub MCP trong phiên 2026-09-03 lỗi kết nối
-(`Authorization header is badly formatted`).
+**Dừng ở bước:** chờ review PR #1. **Chưa có một dòng code nào.**
+
+**Đang chặn:** không có gì chặn việc review. Nhưng trước khi bắt đầu code thì phải
+giải xong việc đầu tiên ở §Việc tiếp theo — `.claude/` bị gitignore nên worktree sẽ
+không có skill và hook.
 
 ## Việc tiếp theo
 
@@ -41,7 +42,7 @@ hiện được. GitHub MCP trong phiên 2026-09-03 lỗi kết nối
 | Feature `core-gameplay` | FR-01 → FR-22 | cao | vòng lặp cốt lõi; mọi feature khác phụ thuộc vào engine của nó |
 | Feature `controls-settings` | FR-23 → FR-30 | trung bình | người chơi mục tiêu coi việc chỉnh DAS/ARR là bắt buộc |
 | Feature `stats-highscores` | FR-31 → FR-34 | trung bình | cần `LocalIdentity` và `ScoreRepository` |
-| Tạo repo GitHub remote | — | trung bình | mở lại được quy trình PR và deploy GitHub Pages |
+| Bật GitHub Pages cho repo | ADR-0001 | thấp | chỉ làm được sau khi có bản build đầu tiên |
 | Chế độ Sprint 40 lines và Ultra 2 phút | — | thấp | dùng chung engine, chỉ khác điều kiện kết thúc và chỉ số hiển thị. **Không** phải Non-Goal — cấp FR mới khi làm |
 | Màn hình xem lại replay | FR-18 | thấp | dữ liệu replay đã được ghi từ bản đầu (ADR-0002); chỉ thiếu giao diện |
 | Leaderboard server + đăng nhập qua Ducker ID | ADR-0004 | thấp | **bị chặn bởi bên ngoài**: Ducker ID chưa có `/oauth/authorize`, `/oauth/token`, JWKS |
