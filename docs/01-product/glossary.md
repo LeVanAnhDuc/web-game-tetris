@@ -2,7 +2,7 @@
 
 > **Trả lời:** Khái niệm này gọi là gì trong code, và hiện ra sao trên UI?
 > **Trạng thái:** ⚪ chưa áp dụng
-> **Cập nhật:** — · commit —
+> **Cập nhật:** — · commit 0010a0f
 > **Cập nhật khi:** xuất hiện một khái niệm nghiệp vụ mới trong code hoặc UI
 
 <!-- CÁCH ĐIỀN

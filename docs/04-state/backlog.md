@@ -1,8 +1,8 @@
 # Đang làm · Việc tiếp theo · Nợ
 
 > **Trả lời:** Đang làm gì, tiếp theo làm gì, và đang nợ những gì?
-> **Trạng thái:** 🔴 chưa điền
-> **Cập nhật:** — · commit —
+> **Trạng thái:** 🟢 đủ
+> **Cập nhật:** 2026-09-03 · commit 0010a0f
 > **Cập nhật khi:** bắt đầu/kết thúc một việc · brainstorm ra việc mới · cố ý đi đường tắt
 
 <!-- CÁCH ĐIỀN
@@ -18,17 +18,40 @@ KHÔNG chứa: tính năng ngoài phạm vi (-> 01-product/overview.md §Non-Goa
 
 ## Đang làm
 
-<!-- TODO: một đoạn ngắn. Đang làm gì · dừng ở bước nào · cái gì đang chặn.
-     Trống nghĩa là không có việc nào đang dở. -->
+**Pass nền móng dự án**, trên branch `docs/project-foundation`.
+
+Đã xong: brainstorm chốt phạm vi + stack; điền tier-1 (`overview` · `journeys` ·
+`scope` FR-01→FR-34 · `nfr` viết lại · `invariants` viết lại · `architecture`);
+viết ADR-0001→ADR-0006.
+
+**Dừng ở bước:** chờ người dùng review bộ tài liệu này trước khi chuyển sang
+`superpowers:writing-plans`. **Chưa có một dòng code nào.**
+
+**Đang chặn:** chưa quyết có tạo repo GitHub remote hay không — repo hiện không có
+`origin`, nên yêu cầu "branch từ `origin/main` mới nhất" của `CLAUDE.md` không thực
+hiện được. GitHub MCP trong phiên 2026-09-03 lỗi kết nối
+(`Authorization header is badly formatted`).
 
 ## Việc tiếp theo
 
 | Việc | Liên quan | Ưu tiên | Vì sao ưu tiên đó |
 | --- | --- | --- | --- |
-| <!-- TODO --> | FR-xx | cao | |
+| Giải bài toán `.claude/` không có trong worktree | — | cao | `feature-flow` bước 3 buộc build trong worktree, nhưng `.claude/` bị `.gitignore` nên worktree không có skill và không có 4 hook. Hướng khả thi trên Windows: junction/symlink. Phải xong **trước** khi build feature đầu tiên |
+| Chạy `design-bootstrap` | — | cao | sinh `docs/design-system/tetris/MASTER.md`. Chưa có file này thì không được mở canvas mockup |
+| Feature `core-gameplay` | FR-01 → FR-22 | cao | vòng lặp cốt lõi; mọi feature khác phụ thuộc vào engine của nó |
+| Feature `controls-settings` | FR-23 → FR-30 | trung bình | người chơi mục tiêu coi việc chỉnh DAS/ARR là bắt buộc |
+| Feature `stats-highscores` | FR-31 → FR-34 | trung bình | cần `LocalIdentity` và `ScoreRepository` |
+| Tạo repo GitHub remote | — | trung bình | mở lại được quy trình PR và deploy GitHub Pages |
+| Chế độ Sprint 40 lines và Ultra 2 phút | — | thấp | dùng chung engine, chỉ khác điều kiện kết thúc và chỉ số hiển thị. **Không** phải Non-Goal — cấp FR mới khi làm |
+| Màn hình xem lại replay | FR-18 | thấp | dữ liệu replay đã được ghi từ bản đầu (ADR-0002); chỉ thiếu giao diện |
+| Leaderboard server + đăng nhập qua Ducker ID | ADR-0004 | thấp | **bị chặn bởi bên ngoài**: Ducker ID chưa có `/oauth/authorize`, `/oauth/token`, JWKS |
+| Hỗ trợ gamepad | FR-15 | thấp | rẻ nhờ ADR-0005, nhưng khó test tự động |
+| PWA / chơi được khi offline | NFR-PERF-05 | thấp | game đã là tĩnh và client-only nên gần như chỉ cần thêm service worker |
 
 ## Nợ kỹ thuật — cố ý làm tạm
 
 | Chỗ nào | Đã đánh đổi gì | Vì sao chấp nhận | Khi nào buộc phải trả |
 | --- | --- | --- | --- |
-| <!-- TODO: file:dòng --> | | | |
+| `docs/02-requirements/nfr.md` — NFR-PERF-01, 04, 05 | Ba con số là **ngân sách tự chọn, chưa đo**: 8ms/frame, 200KB gzip, 2s trên 3G | Chưa có bản build nào để đo. Bỏ trống thì file bị bỏ qua âm thầm; viết số như đã đo thì là số bịa | Ngay sau bản build đầu tiên của `core-gameplay` |
+| Pass nền móng làm trên branch tại chỗ, **không** dùng worktree | Lệch quy trình worktree của `.claude/CLAUDE.md` | Worktree không có `.claude/` (bị gitignore) nên sẽ mất cả skill lẫn 4 hook — mất nhiều hơn được cho một pass chỉ sửa tài liệu | Khi giải xong dòng đầu của §Việc tiếp theo, và bắt buộc trước khi có code |
+| `docs/01-product/glossary.md` để ⚪ | Bộ thuật ngữ EN/VI đã biết trước nhưng chưa được khoá | Chính file đó cấm điền khái niệm chưa xuất hiện trong code hoặc UI | Trong feature `core-gameplay`, điền theo từng khái niệm khi code chạm tới |
