@@ -1,0 +1,51 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      # No GITHUB_PAGES env var here, unlike the sibling badminton project: this
+      # app sets `base: './'` in vite.config.ts, so the same build works at a
+      # domain root and under a Pages project path. That is also why
+      # .env.example says the project reads no environment variables -- the base
+      # is build configuration, not an env var (ADR-0011).
+      - run: npm run build
+      # `enablement` turns Pages on via the API if it is not on yet, so the repo
+      # needs no manual visit to Settings before the first deploy.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

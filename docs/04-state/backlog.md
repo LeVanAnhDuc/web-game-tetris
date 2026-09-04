@@ -2,7 +2,7 @@
 
 > **Trả lời:** Đang làm gì, tiếp theo làm gì, và đang nợ những gì?
 > **Trạng thái:** 🟢 đủ
-> **Cập nhật:** 2026-09-03 · commit 4fc9aae
+> **Cập nhật:** 2026-09-04 · commit df87816
 > **Cập nhật khi:** bắt đầu/kết thúc một việc · brainstorm ra việc mới · cố ý đi đường tắt
 
 <!-- CÁCH ĐIỀN
@@ -24,10 +24,14 @@ Feature `core-gameplay` đã xong và merge: FR-01→FR-16, FR-18→FR-22 và FR
 `xong` trong `scope.md`. 127 test xanh, typecheck sạch, build ra 71.5KB gzip, đã xem
 app thật ở 375/768/1024/1440 với 0 lỗi console.
 
+CI/CD đã dựng (ADR-0011): `ci.yml` chạy trên mọi PR, `deploy.yml` đẩy lên Pages,
+`release.yml` tự tính version từ commit subject và soạn notes từ đó. Logic nằm ở
+`.github/scripts/` nên chạy thử được tại máy — đã kiểm tay 6 tình huống bump.
+
 **Ngoại lệ phải nhớ:** `FR-17` (hiệu ứng âm thanh) nằm trong phạm vi `design.md` của
-feature này nhưng **không có task nào trong `plan.md`** và không được hiện thực. Nó
-đã dồn sang feature `controls-settings` để đi cùng `FR-27` (âm lượng) — phát tiếng mà
-không có cách tắt thì tệ hơn im lặng.
+feature `core-gameplay` nhưng **không có task nào trong `plan.md`** và không được
+hiện thực. Nó đã dồn sang feature `controls-settings` để đi cùng `FR-27` (âm lượng) —
+phát tiếng mà không có cách tắt thì tệ hơn im lặng.
 
 ## Việc tiếp theo
 
@@ -36,7 +40,7 @@ không có cách tắt thì tệ hơn im lặng.
 | Feature `core-gameplay` | FR-01 → FR-22 | cao | vòng lặp cốt lõi; mọi feature khác phụ thuộc vào engine của nó |
 | Feature `controls-settings` | FR-17 · FR-23 → FR-30 | **cao** | người chơi mục tiêu coi việc chỉnh DAS/ARR là bắt buộc; và FR-17 nợ từ `core-gameplay` phải trả ở đây |
 | Feature `stats-highscores` | FR-32 → FR-34 | trung bình | cần `LocalIdentity` và `ScoreRepository`; FR-31 đã xong ở modal kết thúc lượt |
-| Bật GitHub Pages cho repo | ADR-0001 | thấp | chỉ làm được sau khi có bản build đầu tiên |
+| Viết test cho hai script trong `.github/scripts/` | ADR-0011 | thấp | hiện chỉ kiểm bằng cách chạy tay 6 tình huống; chúng quyết định số version nên sai là sai vĩnh viễn |
 | Chế độ Sprint 40 lines và Ultra 2 phút | — | thấp | dùng chung engine, chỉ khác điều kiện kết thúc và chỉ số hiển thị. **Không** phải Non-Goal — cấp FR mới khi làm |
 | Màn hình xem lại replay | FR-18 | thấp | dữ liệu replay đã được ghi từ bản đầu (ADR-0002); chỉ thiếu giao diện |
 | Leaderboard server + đăng nhập qua Ducker ID | ADR-0004 | thấp | **bị chặn bởi bên ngoài**: Ducker ID chưa có `/oauth/authorize`, `/oauth/token`, JWKS |

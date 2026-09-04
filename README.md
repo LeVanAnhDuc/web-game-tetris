@@ -38,6 +38,54 @@ Uses **npm**, not Yarn (ADR-0001). No environment variables are needed — see
 [`.env.example`](.env.example) for why that is the correct answer rather than an
 omission.
 
+## Releases and versioning
+
+Every push to `main` creates a GitHub Release by itself
+([`.github/workflows/release.yml`](.github/workflows/release.yml)), and deploys to
+GitHub Pages ([`deploy.yml`](.github/workflows/deploy.yml)). Pull requests run tests
+and a build first ([`ci.yml`](.github/workflows/ci.yml)).
+
+**The version comes from your commit subjects**, so they have to follow Conventional
+Commits. The whole range since the previous tag is scanned, so one `feat:` anywhere
+in a push is enough for a minor bump — the merge commit's own subject does not need a
+prefix.
+
+| In the range since the last tag | Bump |
+| --- | --- |
+| `feat:` | minor — `v0.4.0` → `v0.5.0` |
+| `fix:` · `docs:` · `chore:` · `ci:` · `refactor:` · `test:` · `perf:` | patch — `v0.4.0` → `v0.4.1` |
+| `feat!:` (any `type!:`) or a `BREAKING CHANGE` footer | see the 0.x rule below |
+
+**The 0.x rule:** while the major version is `0`, a breaking change bumps the
+**minor**, not the major. Nothing is stable before 1.0, and `1.0.0` is a claim about
+completeness — so crossing to it takes the explicit marker rather than happening on
+its own. The first release of this repo was `v0.1.0` for the same reason.
+
+Three markers, honoured **only in the HEAD commit subject** (not in bodies — the
+bodies here run long and discuss releases, which would otherwise trigger them):
+
+- `[release minor]` / `[release major]` — force a bigger bump. `[release major]` is
+  the only way to reach `1.0.0`.
+- `[skip release]` — no release for this push. For CI-only changes where a release
+  would be noise. Never use it on a push that also carries a `feat:`, or you cancel
+  that feature's release too.
+
+**The notes are composed from the commit subjects**, grouped by type, breaking
+changes first — see [`release-notes.sh`](.github/scripts/release-notes.sh). Not from
+`--generate-notes`, which lists merged pull requests and therefore says nothing at all
+when a push was direct commits. Both scripts run locally, so you can see what a
+release will say before it says it:
+
+```bash
+bash .github/scripts/next-version.sh
+bash .github/scripts/release-notes.sh v0.2.0 v0.1.0
+```
+
+**The README is not automated.** Any `feat:` that changes what a player can do must
+update the `## Features` section above **in the same branch**, in the existing style —
+one short English bullet. A README-only sync uses `docs:`, and never carries
+`[skip release]`.
+
 ## How it is put together
 
 | Folder | Holds |
