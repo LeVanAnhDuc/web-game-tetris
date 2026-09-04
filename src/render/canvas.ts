@@ -30,8 +30,14 @@ import { BOARD_GRID, BOARD_WELL, buildSprites, type SpriteSheet } from './sprite
 const GAP = 1
 const TICK_MS = 1000 / TICK_HZ
 
+export interface RenderOptions {
+  ghost: boolean
+  colorBlind: boolean
+}
+
 export interface BoardRenderer {
   resize(cssWidth: number, cssHeight: number): void
+  setOptions(next: RenderOptions): void
   /** `alpha` is progress toward the next tick, 0..1. */
   draw(state: GameState, alpha: number, effects: Effects): void
   readonly cell: number
@@ -45,10 +51,11 @@ export function createBoardRenderer(canvas: HTMLCanvasElement): BoardRenderer {
 
   // Reused across frames rather than returned fresh from clearPhase.
   const cp: ClearPhase = { active: false, flash: 0, collapse: 0 }
+  let options: RenderOptions = { ghost: true, colorBlind: false }
 
   function ensureSprites(): void {
-    if (!sprites || sprites.cell !== cell || sprites.dpr !== dpr) {
-      sprites = cell > 0 ? buildSprites(cell, dpr) : null
+    if (!sprites || sprites.cell !== cell || sprites.dpr !== dpr || sprites.colorBlind !== options.colorBlind) {
+      sprites = cell > 0 ? buildSprites(cell, dpr, options.colorBlind) : null
     }
   }
 
@@ -200,7 +207,7 @@ export function createBoardRenderer(canvas: HTMLCanvasElement): BoardRenderer {
     // The ghost snaps to the grid: it marks a landing square, and a ghost that
     // slides is a ghost that lies about where the piece will end up.
     const drop = dropDistance(state.board, active)
-    if (drop > 0) {
+    if (drop > 0 && options.ghost) {
       for (let i = 0; i < cells.length; i++) {
         const c = cells[i] as readonly [number, number]
         const r = active.row + c[1] + drop - TOP_VISIBLE_ROW
@@ -223,6 +230,10 @@ export function createBoardRenderer(canvas: HTMLCanvasElement): BoardRenderer {
 
   return {
     resize,
+    setOptions(next) {
+      options = next
+      ensureSprites()
+    },
     draw,
     get cell() {
       return cell

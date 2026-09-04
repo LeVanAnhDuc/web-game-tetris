@@ -1,4 +1,5 @@
 import { TICK_HZ } from './config'
+import type { Config } from './types'
 
 /**
  * Gravity per level (FR-08).
@@ -34,6 +35,23 @@ export function softDropCellsPerTick(
 ): number {
   const gravity = gravityCellsPerTick(level, maxLevel)
   return Math.max(gravity * factor, 1 / 3)
+}
+
+/**
+ * The fall speed actually in force: the Guideline curve scaled by difficulty, or a
+ * flat player-chosen rate that replaces it.
+ *
+ * A flat rate replaces the curve rather than scaling it, because "I want it this
+ * fast" means one speed, not a speed that keeps climbing.
+ */
+export function effectiveGravity(cfg: Config, level: number): number {
+  if (cfg.fixedCellsPerSecond !== null) return cfg.fixedCellsPerSecond / TICK_HZ
+  return gravityCellsPerTick(level, cfg.maxLevel) * cfg.gravityScale
+}
+
+/** Soft drop is a multiple of whatever gravity is in force, with a usable floor. */
+export function effectiveSoftDrop(cfg: Config, level: number): number {
+  return Math.max(effectiveGravity(cfg, level) * cfg.softDropFactor, 1 / 3)
 }
 
 /** Level from total lines cleared (FR-11), capped. */

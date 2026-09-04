@@ -43,6 +43,7 @@ export function bevelWidth(cell: number): number {
 export interface SpriteSheet {
   readonly cell: number
   readonly dpr: number
+  readonly colorBlind: boolean
   /** Sprite for a board cell code (1..7), or null for empty. */
   forCode(code: number): CanvasImageSource | null
   readonly ghost: CanvasImageSource
@@ -106,21 +107,43 @@ function drawGhostSprite(size: number, bevel: number, radius: number): HTMLCanva
  * Builds the whole sheet. Call this only when the cell size or DPR changes --
  * forgetting to rebuild is how cells go blurry on a high-DPR screen (ADR-0009 §4).
  */
-export function buildSprites(cell: number, dpr: number): SpriteSheet {
+/**
+ * FR-26 / NFR-A11Y-06. ADR-0008 measured the piece hues against each other and found
+ * T vs Z at 1.20:1 and S vs O at 1.25:1 -- for a player who cannot separate those,
+ * they are the same piece. So this is not a preference toggle, it is the mode that
+ * makes the game playable at all for them: each cell carries its letter, and the
+ * fills desaturate so the letter is what carries the meaning.
+ */
+const CB_FILL = '#4A5160'
+
+export function buildSprites(cell: number, dpr: number, colorBlind = false): SpriteSheet {
   const px = Math.max(1, Math.round(cell * dpr))
   const bevel = Math.max(1, Math.round(bevelWidth(cell) * dpr))
   const radius = Math.max(1, Math.round(CELL_RADIUS * dpr))
 
   const byCode: (CanvasImageSource | null)[] = [null]
   for (const kind of KINDS) {
-    byCode.push(drawCellSprite(px, bevel, PIECE_COLORS[kind], radius))
+    const sprite = drawCellSprite(px, bevel, colorBlind ? CB_FILL : PIECE_COLORS[kind], radius)
+    if (colorBlind) stampLetter(sprite, kind, px)
+    byCode.push(sprite)
   }
   const ghost = drawGhostSprite(px, bevel, radius)
 
   return {
     cell,
     dpr,
+    colorBlind,
     forCode: (code) => byCode[code] ?? null,
     ghost,
   }
+}
+
+function stampLetter(canvas: HTMLCanvasElement, kind: Kind, px: number): void {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  ctx.fillStyle = '#F4F5F7'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.font = `600 ${Math.max(8, Math.round(px * 0.6))}px ui-monospace, monospace`
+  ctx.fillText(kind, px / 2, px / 2 + px * 0.02)
 }

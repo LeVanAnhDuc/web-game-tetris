@@ -579,3 +579,193 @@ body {
     color: var(--color-text-muted);
   }
 }
+
+/* ------------------------------------------------------------ settings screen
+   Everything achromatic (MASTER.md §1): the only colour in this product lives
+   inside the playfield, and a settings dialog is chrome. */
+
+.modal--wide {
+  width: min(94vw, 560px);
+  max-height: min(86vh, 720px);
+}
+
+.modal__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.modal__head .modal__title {
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+/* The dialog scrolls, not the page behind it. */
+.modal__scroll {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  padding-right: var(--space-xs);
+}
+
+.setgroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.setrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.setrow__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.setrow__label {
+  font: 500 var(--text-base) / 1.3 var(--font-ui);
+  color: var(--color-text);
+}
+
+.setrow__hint {
+  font: 500 var(--text-sm) / 1.4 var(--font-ui);
+  color: var(--color-text-muted);
+}
+
+.setrow__control {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.segmented {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+}
+
+.segmented__btn {
+  min-height: 44px;
+  padding: 0 var(--space-md);
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font: 500 var(--text-sm) / 1 var(--font-ui);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.segmented__btn:last-child {
+  border-right: 0;
+}
+
+.segmented__btn[aria-pressed='true'] {
+  background: var(--color-action);
+  color: var(--color-on-action);
+  font-weight: 700;
+}
+
+.segmented__btn:hover[aria-pressed='false'] {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* A switch, sized as a hit target first (NFR-A11Y-03). */
+.toggle {
+  position: relative;
+  width: 56px;
+  height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.toggle::before {
+  content: '';
+  position: absolute;
+  inset: 11px 0;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.toggle[aria-checked='true']::before {
+  background: var(--color-action);
+  border-color: var(--color-action);
+}
+
+.toggle__knob {
+  position: absolute;
+  top: 14px;
+  left: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--color-text-muted);
+  transition: transform 150ms ease, background-color 150ms ease;
+}
+
+.toggle[aria-checked='true'] .toggle__knob {
+  transform: translateX(32px);
+  background: var(--color-on-action);
+}
+
+.slider {
+  width: 180px;
+  height: 44px;
+  accent-color: var(--color-action);
+  cursor: pointer;
+}
+
+.slider:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bindlist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.bindrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+/* MASTER.md §7: a keycap is a 44px hit target, unlike the hint chips on the play
+   screen, which are labels. */
+.keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--space-sm);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-control);
+  font: 600 var(--text-sm) / 1 var(--font-mono);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.keycap[data-capturing='true'] {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+  color: var(--color-text-muted);
+}

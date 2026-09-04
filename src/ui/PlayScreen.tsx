@@ -1,10 +1,12 @@
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { COLS, VISIBLE_ROWS, type Action, type Kind } from '../engine'
 import { touchHandlers } from '../input/touch'
 import { useI18n, type MessageKey } from '../i18n'
 import { Icon, type IconName } from './Icon'
 import { PiecePreview } from './PiecePreview'
 import { AnimatedNumber, useBumpKey } from './AnimatedNumber'
+import { useSettings } from '../settings'
+import { SettingsScreen } from './SettingsScreen'
 import { useGameSession, type HudSnapshot } from './useGameSession'
 
 /**
@@ -93,7 +95,15 @@ function Queue({ next, cell }: { next: readonly Kind[]; cell: number }) {
   )
 }
 
-function PausedModal({ onResume, onRestart }: { onResume: () => void; onRestart: () => void }) {
+function PausedModal({
+  onResume,
+  onSettings,
+  onRestart,
+}: {
+  onResume: () => void
+  onSettings: () => void
+  onRestart: () => void
+}) {
   const { t } = useI18n()
   return (
     <div className="overlay" role="dialog" aria-modal="true" aria-label={t('modal.paused')}>
@@ -104,7 +114,7 @@ function PausedModal({ onResume, onRestart }: { onResume: () => void; onRestart:
             <Icon name="play" size={18} />
             {t('action.resume')}
           </button>
-          <button type="button" className="btn btn--secondary" aria-disabled="true" title={t('notReady.body')}>
+          <button type="button" className="btn btn--secondary" onClick={onSettings}>
             {t('action.settings')}
           </button>
           <button type="button" className="btn btn--danger" onClick={onRestart}>
@@ -156,8 +166,18 @@ export function PlayScreen() {
   const nf = useMemo(() => new Intl.NumberFormat(locale), [locale])
   const fmt = useCallback((n: number) => nf.format(n), [nf])
 
+  const { settings } = useSettings()
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  void settings
+
   const paused = hud.phase === 'paused'
   const over = hud.phase === 'gameOver'
+
+  /** Opening settings pauses first: reading sliders while pieces fall is a trap. */
+  const openSettings = useCallback(() => {
+    if (!paused && !over) press('pause')
+    setSettingsOpen(true)
+  }, [paused, over, press])
 
   // The level flashes once when it changes. The score counts up inside
   // AnimatedNumber, which writes its own text node rather than re-rendering this
@@ -195,21 +215,14 @@ export function PlayScreen() {
           </span>
         </div>
 
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={t('action.settings')}
-          aria-disabled="true"
-          title={t('notReady.body')}
-        >
+        <button type="button" className="icon-btn" aria-label={t('action.settings')} onClick={openSettings}>
           <Icon name="sliders" />
         </button>
         <button
           type="button"
           className="icon-btn"
           aria-label={t('action.language')}
-          aria-disabled="true"
-          title={t('notReady.body')}
+          onClick={openSettings}
           style={{ width: 'auto', minWidth: 44, fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)' }}
         >
           {locale.toUpperCase()}
@@ -285,8 +298,11 @@ export function PlayScreen() {
         <Hint keys="Esc" whatKey="hint.pause" />
       </footer>
 
-      {paused ? <PausedModal onResume={() => press('pause')} onRestart={restart} /> : null}
-      {over ? <GameOverModal hud={hud} onRestart={restart} /> : null}
+      {settingsOpen ? <SettingsScreen onClose={() => setSettingsOpen(false)} /> : null}
+      {paused && !settingsOpen ? (
+        <PausedModal onResume={() => press('pause')} onSettings={openSettings} onRestart={restart} />
+      ) : null}
+      {over && !settingsOpen ? <GameOverModal hud={hud} onRestart={restart} /> : null}
     </div>
   )
 }

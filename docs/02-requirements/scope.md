@@ -36,20 +36,20 @@ KHÔNG chứa: cách hiện thực, ngưỡng phi chức năng (-> nfr.md), lý 
 | FR-14 | Tự tạm dừng khi tab mất focus | US-01 | xong |
 | FR-15 | Điều khiển bàn phím có DAS/ARR | US-01 | xong |
 | FR-16 | Điều khiển cảm ứng trên màn hình nhỏ | US-01 | xong |
-| FR-17 | Hiệu ứng âm thanh | US-01 | chưa — dồn sang feature 3 cùng FR-27 (âm lượng) |
+| FR-17 | Hiệu ứng âm thanh | US-01 | xong |
 | FR-18 | Ghi lại replay của lượt chơi (seed + chuỗi lệnh) | US-01 | xong |
 | FR-19 | Nhận diện T-spin và T-spin mini | US-01 | xong |
 | FR-20 | Combo | US-01 | xong |
 | FR-21 | Back-to-back | US-01 | xong |
 | FR-22 | Perfect clear | US-01 | xong |
-| FR-23 | Đổi phím cho từng hành động | US-02 | chưa |
-| FR-24 | Điều chỉnh DAS và ARR | US-02 | chưa |
-| FR-25 | Bật/tắt hình bóng điểm đáp | US-02 | chưa |
-| FR-26 | Chế độ phân biệt khối không dựa vào màu | US-02 | chưa |
-| FR-27 | Điều chỉnh âm lượng | US-02 | chưa |
-| FR-28 | Đổi ngôn ngữ giao diện EN/VI, đoán mặc định từ trình duyệt | US-02 | chưa |
-| FR-29 | Khôi phục thiết lập về mặc định | US-02 | chưa |
-| FR-30 | Lưu thiết lập kèm phiên bản schema và migration | US-02 | chưa |
+| FR-23 | Đổi phím cho từng hành động | US-02 | xong |
+| FR-24 | Điều chỉnh DAS và ARR | US-02 | xong |
+| FR-25 | Bật/tắt hình bóng điểm đáp | US-02 | xong |
+| FR-26 | Chế độ phân biệt khối không dựa vào màu | US-02 | xong |
+| FR-27 | Điều chỉnh âm lượng | US-02 | xong |
+| FR-28 | Đổi ngôn ngữ giao diện EN/VI, đoán mặc định từ trình duyệt | US-02 | xong |
+| FR-29 | Khôi phục thiết lập về mặc định | US-02 | xong |
+| FR-30 | Lưu thiết lập kèm phiên bản schema và migration | US-02 | xong |
 | FR-31 | Bảng chỉ số cuối lượt (điểm, hàng, cấp độ, thời gian, PPS) | US-03 | xong |
 | FR-32 | Điểm cao cục bộ theo từng chế độ | US-03 | chưa |
 | FR-33 | Hiển thị thời điểm đạt điểm theo locale đang chọn | US-03 | chưa |
@@ -61,3 +61,6 @@ KHÔNG chứa: cách hiện thực, ngưỡng phi chức năng (-> nfr.md), lý 
 | FR-39 | Xoá hàng: nháy trắng rồi các hàng trên trượt xuống | US-01 | xong |
 | FR-40 | Rung bàn chơi khi xoá 4 hàng | US-01 | xong |
 | FR-41 | HUD: điểm đếm tăng dần, nháy khi lên cấp | US-01 | xong |
+| FR-42 | Ba mức độ khó: dễ · vừa · khó, nhân vào đường cong gravity | US-02 | xong |
+| FR-43 | Tốc độ rơi tự đặt, thay hẳn đường cong theo cấp | US-02 | xong |
+| FR-44 | Bật/tắt nội suy di chuyển ngang | US-02 | xong |

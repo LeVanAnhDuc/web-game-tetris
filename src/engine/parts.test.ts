@@ -12,6 +12,8 @@ import {
   scoreForClear,
 } from './scoring'
 import {
+  effectiveGravity,
+  effectiveSoftDrop,
   gravityCellsPerTick,
   levelFromLines,
   secondsPerRow,
@@ -306,5 +308,43 @@ describe('detectSpin', () => {
     const board = createBoard()
     const active = { kind: 'T' as const, rot: 1 as Rot, col: -1, row: ROWS - 3 }
     expect(detectSpin(board, active, 'rotate', 0)).toBe('none')
+  })
+})
+
+describe('difficulty and custom fall speed (FR-42, FR-43)', () => {
+  const cfg = (over: Partial<typeof DEFAULT_CONFIG>) => ({ ...DEFAULT_CONFIG, ...over })
+
+  it('scales the whole curve, so easy is slower and hard is faster at every level', () => {
+    for (let lvl = 1; lvl <= 20; lvl++) {
+      const easy = effectiveGravity(cfg({ gravityScale: 0.6 }), lvl)
+      const normal = effectiveGravity(cfg({ gravityScale: 1 }), lvl)
+      const hard = effectiveGravity(cfg({ gravityScale: 1.8 }), lvl)
+      expect(easy, `level ${lvl}`).toBeLessThan(normal)
+      expect(hard, `level ${lvl}`).toBeGreaterThan(normal)
+    }
+  })
+
+  it('keeps the level progression under a preset', () => {
+    const c = cfg({ gravityScale: 0.6 })
+    expect(effectiveGravity(c, 10)).toBeGreaterThan(effectiveGravity(c, 1))
+  })
+
+  it('a custom speed REPLACES the curve rather than scaling it', () => {
+    const c = cfg({ fixedCellsPerSecond: 4, gravityScale: 99 })
+    // Same at every level: "I want it this fast" means one speed.
+    expect(effectiveGravity(c, 1)).toBeCloseTo(4 / TICK_HZ, 12)
+    expect(effectiveGravity(c, 20)).toBeCloseTo(4 / TICK_HZ, 12)
+  })
+
+  it('soft drop stays faster than whatever gravity is in force', () => {
+    for (const c of [cfg({ gravityScale: 0.6 }), cfg({ gravityScale: 1.8 }), cfg({ fixedCellsPerSecond: 12 })]) {
+      for (const lvl of [1, 10, 20]) {
+        expect(effectiveSoftDrop(c, lvl)).toBeGreaterThanOrEqual(effectiveGravity(c, lvl))
+      }
+    }
+  })
+
+  it('defaults to the unmodified Guideline curve', () => {
+    expect(effectiveGravity(DEFAULT_CONFIG, 1)).toBe(gravityCellsPerTick(1, DEFAULT_CONFIG.maxLevel))
   })
 })

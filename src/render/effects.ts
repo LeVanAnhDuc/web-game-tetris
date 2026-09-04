@@ -69,6 +69,9 @@ export interface Effects {
   shakeX(): number
   shakeY(): number
 
+  /** FR-36 can be turned off: the tween makes the image lag the key slightly. */
+  setSmoothHorizontal(on: boolean): void
+
   /** Live, not read once at construction. */
   reduced(): boolean
   dispose(): void
@@ -117,6 +120,7 @@ export function createEffects(): Effects {
   // Sideways motion is a short tween rather than tick interpolation.
   let colFrom = -1
   let colTweenT = 0
+  let smoothHorizontal = true
 
   // Snapshot taken before `reduce` runs.
   let snapRow = -1
@@ -283,7 +287,7 @@ export function createEffects(): Effects {
     pieceCol(state) {
       const a = state.active
       if (!a) return 0
-      if (motion.get() || colTweenT <= 0 || colFrom < 0) return a.col
+      if (!smoothHorizontal || motion.get() || colTweenT <= 0 || colFrom < 0) return a.col
       // Eased, so the step decelerates into place instead of stopping dead.
       return lerp(colFrom, a.col, easeOutCubic(1 - colTweenT / COL_TWEEN_MS))
     },
@@ -319,6 +323,11 @@ export function createEffects(): Effects {
       if (motion.get() || shakeT <= 0) return 0
       const decay = shakeT / SHAKE_MS
       return Math.cos(shakeT * 0.11) * SHAKE_PX * 0.6 * decay
+    },
+
+    setSmoothHorizontal(on) {
+      smoothHorizontal = on
+      if (!on) colTweenT = 0
     },
 
     reduced: () => motion.get(),

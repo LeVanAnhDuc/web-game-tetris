@@ -21,7 +21,14 @@ against how it looks on screen.
   small screens.
 - Pause and resume, and an automatic pause when the tab goes to the background so a
   game is never lost to a tab switch.
-- Bilingual interface, English and Vietnamese, detected from the browser.
+- Bilingual interface, English and Vietnamese, detected from the browser and
+  switchable in settings.
+- A settings screen that persists: rebind every key, tune DAS and ARR, pick Easy,
+  Normal, Hard or a fall speed of your own, toggle the landing hint and the smooth
+  sideways motion, and a mode that marks each piece with its letter for when colour
+  is not enough.
+- Sound effects, synthesised rather than shipped as files, with their own mute and
+  volume.
 - Motion that reads as motion: pieces fall sub-cell rather than stepping a whole row
   at a time, sideways moves travel, a hard drop leaves a trail, a completed row
   flashes before the stack collapses onto it, and a tetris shakes the board. All of
