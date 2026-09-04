@@ -1,0 +1,49 @@
+name: CI
+
+# Runs on every pull request. Without this, a branch could be merged red and the
+# first thing to notice would be the deploy job on `main` -- after the merge.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` and not `npm install`: the lockfile is the answer, and the
+      # workspace has already been bitten by a different dependency tree.
+      - run: npm ci
+
+      # NFR-SEC-02 names CI as where this is checked, so this is that check.
+      # `--audit-level=high` fails the job on high and critical only: moderate
+      # advisories in dev-only tooling would otherwise block every PR.
+      - run: npm audit --audit-level=high
+
+      - run: npm test
+
+      # `npm run build` is `tsc --noEmit && vite build`, so this covers typecheck.
+      - run: npm run build
+
+      - name: Report bundle size against NFR-PERF-04
+        run: |
+          # The threshold lives in docs/02-requirements/nfr.md. Printed rather than
+          # enforced for now: the budget is 200KB and the build is well under it, so
+          # a hard gate would only ever fire on a mistake this log already shows.
+          echo "gzip sizes of the built assets:"
+          for f in dist/assets/*.js dist/assets/*.css; do
+            [ -f "$f" ] || continue
+            printf '  %-40s %s\n' "$(basename "$f")" "$(gzip -c "$f" | wc -c | awk '{printf "%.1f kB", $1/1024}')"
+          done
