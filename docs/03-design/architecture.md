@@ -69,7 +69,7 @@ graph TD
 | `engine/` | Toàn bộ luật chơi dưới dạng state + `reduce` thuần khiết | chỉ `engine/` | **mọi module khác**, kể cả `runtime/` |
 | `runtime/` | Vòng lặp fixed-timestep và vòng đời một lượt chơi; phát event ra ngoài | `engine/` · `render/` · type của `input/` | `ui/` · `storage/` · `identity/` · `i18n/` |
 | `input/` | Dịch sự kiện thiết bị thành `Command` có press/release | type của `engine/` | `engine.reduce()` · `runtime/` · `ui/` · `render/` |
-| `render/` | Vẽ state lên canvas, không giữ state riêng | type + state của `engine/` | `runtime/` · `ui/` · `input/` · `storage/` |
+| `render/` | Vẽ state lên canvas. Được giữ **state trình bày** suy ra từ engine + event (ADR-0012) | type + state của `engine/` | `runtime/` · `ui/` · `input/` · `storage/` |
 | `storage/` | Đọc/ghi thiết lập, điểm cao, replay qua interface async | — | tất cả |
 | `identity/` | Cung cấp danh tính hiện tại qua interface async | `storage/` | `engine/` · `runtime/` · `render/` · `ui/` |
 | `i18n/` | Tra chuỗi theo locale đang chọn | `storage/` (đọc locale đã lưu) | `engine/` · `runtime/` · `render/` |
@@ -81,6 +81,9 @@ Hai ranh giới dễ bị phá nhất, ghi rõ để khỏi phải suy luận l�
   nhận event rồi mới lưu. Nếu `runtime/` gọi `storage/`, vòng lặp game phụ thuộc I/O.
 - **`ui/` khởi tạo `render/` nhưng không vẽ.** Component React tạo thẻ `canvas` rồi
   đưa nó cho `runtime/`; chỉ `runtime/` gọi `draw()` mỗi frame.
+- **State trình bày của `render/` là một chiều.** `render/effects.ts` nhớ vị trí lần
+  vẽ trước và các đồng hồ hiệu ứng, nhưng **không ai đọc ngược lại** — mọi logic đọc
+  vị trí khối phải đọc `engine/` (ADR-0012).
 
 ## 4. Luồng dữ liệu của đường đi quan trọng nhất
 

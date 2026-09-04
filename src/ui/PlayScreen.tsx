@@ -4,6 +4,7 @@ import { touchHandlers } from '../input/touch'
 import { useI18n, type MessageKey } from '../i18n'
 import { Icon, type IconName } from './Icon'
 import { PiecePreview } from './PiecePreview'
+import { useCountUp, useBumpKey } from './AnimatedNumber'
 import { useGameSession, type HudSnapshot } from './useGameSession'
 
 /**
@@ -151,6 +152,11 @@ export function PlayScreen() {
   const paused = hud.phase === 'paused'
   const over = hud.phase === 'gameOver'
 
+  // The score runs up to its new value; the level flashes once when it changes.
+  // Both are HUD, outside the canvas and outside the game loop's frame budget.
+  const shownScore = useCountUp(hud.score)
+  const levelBump = useBumpKey(hud.level)
+
   return (
     <div className="app">
       <header className="topbar">
@@ -169,7 +175,7 @@ export function PlayScreen() {
 
         <div className="topbar__stack topbar__grow">
           <span className="label">{t('hud.score')}</span>
-          <span className="value">{nf.format(hud.score)}</span>
+          <span className="value">{nf.format(shownScore)}</span>
         </div>
         <div className="topbar__stack topbar__stack--wide">
           <span className="label">{t('hud.lines')}</span>
@@ -177,7 +183,9 @@ export function PlayScreen() {
         </div>
         <div className="topbar__stack">
           <span className="label">{t('hud.level')}</span>
-          <span className="value">{nf.format(hud.level)}</span>
+          <span key={levelBump} className="value value--bump">
+            {nf.format(hud.level)}
+          </span>
         </div>
 
         <button

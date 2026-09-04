@@ -5,6 +5,7 @@ import { STEP_MS, createLoop, type LoopDeps } from './loop'
 function harness(hidden = false) {
   let ticks = 0
   let draws = 0
+  let lastAlpha = -1
   let autoPauses = 0
   let isHidden = hidden
   const deps: LoopDeps = {
@@ -18,8 +19,9 @@ function harness(hidden = false) {
       tick: () => {
         ticks++
       },
-      draw: () => {
+      draw: (a: number) => {
         draws++
+        lastAlpha = a
       },
       onAutoPause: () => {
         autoPauses++
@@ -29,7 +31,7 @@ function harness(hidden = false) {
   )
   return {
     loop,
-    counts: () => ({ ticks, draws, autoPauses }),
+    counts: () => ({ ticks, draws, autoPauses, lastAlpha }),
     hide: (v: boolean) => {
       isHidden = v
     },
@@ -115,5 +117,25 @@ describe('fixed-timestep loop', () => {
     expect(h.loop.running).toBe(true)
     h.loop.stop()
     expect(h.loop.running).toBe(false)
+  })
+
+  it('reports how far the clock has moved toward the next tick', () => {
+    const h = harness()
+    h.loop.frame(0)
+    // Exactly one step consumed leaves nothing over.
+    h.loop.frame(STEP_MS)
+    expect(h.counts().lastAlpha).toBeCloseTo(0, 5)
+    // Half a step past a tick is half way to the next one.
+    h.loop.frame(STEP_MS * 1.5)
+    expect(h.counts().lastAlpha).toBeCloseTo(0.5, 5)
+  })
+
+  it('keeps alpha inside [0, 1] even after a stall', () => {
+    const h = harness()
+    h.loop.frame(0)
+    h.loop.frame(10_000)
+    const a = h.counts().lastAlpha
+    expect(a).toBeGreaterThanOrEqual(0)
+    expect(a).toBeLessThanOrEqual(1)
   })
 })

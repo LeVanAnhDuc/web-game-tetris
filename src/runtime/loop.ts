@@ -31,8 +31,15 @@ export interface LoopDeps {
 export interface LoopHandlers {
   /** Advance the game by exactly one tick. */
   tick(): void
-  /** Draw once per animation frame, after the ticks. */
-  draw(): void
+  /**
+   * Draw once per animation frame, after the ticks.
+   *
+   * `alpha` is how far the clock has moved toward the NEXT tick, 0..1 -- the
+   * renderer interpolates with it so motion is smooth while the engine still
+   * advances only in whole ticks (invariant #2). `dtMs` is real elapsed time, for
+   * effect timers that are measured in milliseconds rather than ticks.
+   */
+  draw(alpha: number, dtMs: number): void
   /** Called when the loop pauses itself because the tab went away. */
   onAutoPause?(): void
 }
@@ -95,7 +102,9 @@ export function createLoop(handlers: LoopHandlers, deps: LoopDeps = browserDeps)
     // instead of fast-forwarding through a death the player never saw (NFR-REL-04).
     if (acc + EPS >= STEP_MS) acc = 0
 
-    handlers.draw()
+    // Whatever is left in the accumulator IS the sub-tick position.
+    const alpha = Math.min(1, Math.max(0, acc / STEP_MS))
+    handlers.draw(alpha, dt > 0 ? dt : 0)
     return ran
   }
 

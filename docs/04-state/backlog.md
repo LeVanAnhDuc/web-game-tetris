@@ -18,20 +18,16 @@ KHÔNG chứa: tính năng ngoài phạm vi (-> 01-product/overview.md §Non-Goa
 
 ## Đang làm
 
-**Không có việc nào đang dở.**
+Đang chạy loạt 4 gói theo yêu cầu: **A animation** (xong, đang merge) → **B settings +
+lưu trữ** → **C âm thanh** → **D độ khó + tốc độ tuỳ chỉnh**.
 
-Feature `core-gameplay` đã xong và merge: FR-01→FR-16, FR-18→FR-22 và FR-31 sang
-`xong` trong `scope.md`. 127 test xanh, typecheck sạch, build ra 71.5KB gzip, đã xem
-app thật ở 375/768/1024/1440 với 0 lỗi console.
+Gói A: FR-35→FR-41, ADR-0012. Engine không đổi một dòng — nội suy nằm hoàn toàn ở
+`render/effects.ts`.
 
-CI/CD đã dựng (ADR-0011): `ci.yml` chạy trên mọi PR, `deploy.yml` đẩy lên Pages,
-`release.yml` tự tính version từ commit subject và soạn notes từ đó. Logic nằm ở
-`.github/scripts/` nên chạy thử được tại máy — đã kiểm tay 6 tình huống bump.
-
-**Ngoại lệ phải nhớ:** `FR-17` (hiệu ứng âm thanh) nằm trong phạm vi `design.md` của
-feature `core-gameplay` nhưng **không có task nào trong `plan.md`** và không được
-hiện thực. Nó đã dồn sang feature `controls-settings` để đi cùng `FR-27` (âm lượng) —
-phát tiếng mà không có cách tắt thì tệ hơn im lặng.
+**Bài học đã trả giá:** bản nội suy đầu tiên *có test xanh* nhưng **không hoạt động** —
+nó nội suy giữa hai tick, mà ở cấp 1 khối chỉ đổi hàng mỗi 60 tick. Phát hiện bằng
+cách đo canvas trên browser thật (45 frame chỉ có 1 vị trí). Thứ mang thông tin
+dưới-mức-ô là `gravityAcc` của engine.
 
 ## Việc tiếp theo
 
