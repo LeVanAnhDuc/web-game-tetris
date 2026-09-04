@@ -121,6 +121,10 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
 
     const loop = createLoop({
       tick: () => {
+        // BEFORE the engine steps: `reduce` locks a piece and spawns the next one in
+        // the same call, so anything the effects need about the piece that just
+        // locked has to be captured here.
+        effects.beforeTick(session.state)
         const events = session.tick()
         effects.onTick(session.state, events)
         sinceHud++

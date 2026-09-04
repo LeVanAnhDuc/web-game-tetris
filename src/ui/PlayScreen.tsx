@@ -1,10 +1,10 @@
-import { useRef } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { COLS, VISIBLE_ROWS, type Action, type Kind } from '../engine'
 import { touchHandlers } from '../input/touch'
 import { useI18n, type MessageKey } from '../i18n'
 import { Icon, type IconName } from './Icon'
 import { PiecePreview } from './PiecePreview'
-import { useCountUp, useBumpKey } from './AnimatedNumber'
+import { AnimatedNumber, useBumpKey } from './AnimatedNumber'
 import { useGameSession, type HudSnapshot } from './useGameSession'
 
 /**
@@ -49,7 +49,11 @@ function PadButton({
   send: (cmd: { k: 'press' | 'release'; a: Action }) => void
 }) {
   const { t } = useI18n()
-  const handlers = useRef(touchHandlers(send, action)).current
+  // `useRef(touchHandlers(...))` evaluates its argument on every render and throws
+  // the result away; lazily initialising keeps it to one per button.
+  const ref = useRef<ReturnType<typeof touchHandlers> | null>(null)
+  if (ref.current === null) ref.current = touchHandlers(send, action)
+  const handlers = ref.current
   const label = t(`action.${action}` as MessageKey)
   return (
     <button
@@ -114,7 +118,7 @@ function PausedModal({ onResume, onRestart }: { onResume: () => void; onRestart:
 
 function GameOverModal({ hud, onRestart }: { hud: HudSnapshot; onRestart: () => void }) {
   const { t, locale } = useI18n()
-  const nf = new Intl.NumberFormat(locale)
+  const nf = useMemo(() => new Intl.NumberFormat(locale), [locale])
   return (
     <div className="overlay" role="dialog" aria-modal="true" aria-label={t('modal.gameOver')}>
       <div className="modal">
@@ -147,14 +151,17 @@ export function PlayScreen() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const { hud, send, press, restart } = useGameSession(canvasRef)
   const { t, locale } = useI18n()
-  const nf = new Intl.NumberFormat(locale)
+  // Memoised: building an Intl formatter is not free, and this component now
+  // re-renders on every HUD publish.
+  const nf = useMemo(() => new Intl.NumberFormat(locale), [locale])
+  const fmt = useCallback((n: number) => nf.format(n), [nf])
 
   const paused = hud.phase === 'paused'
   const over = hud.phase === 'gameOver'
 
-  // The score runs up to its new value; the level flashes once when it changes.
-  // Both are HUD, outside the canvas and outside the game loop's frame budget.
-  const shownScore = useCountUp(hud.score)
+  // The level flashes once when it changes. The score counts up inside
+  // AnimatedNumber, which writes its own text node rather than re-rendering this
+  // tree at frame rate (invariant #3).
   const levelBump = useBumpKey(hud.level)
 
   return (
@@ -175,7 +182,7 @@ export function PlayScreen() {
 
         <div className="topbar__stack topbar__grow">
           <span className="label">{t('hud.score')}</span>
-          <span className="value">{nf.format(shownScore)}</span>
+          <AnimatedNumber className="value" value={hud.score} format={fmt} />
         </div>
         <div className="topbar__stack topbar__stack--wide">
           <span className="label">{t('hud.lines')}</span>

@@ -3,12 +3,14 @@ import { useEffect, useRef, useState } from 'react'
 /**
  * A number that counts toward its new value instead of jumping to it.
  *
- * This is HUD, not playfield: it lives in React and runs its own short
- * `requestAnimationFrame`, well away from the game loop's frame budget
- * (NFR-PERF-01). A score that snaps from 1,200 to 2,000 tells you nothing about
- * what just happened; one that runs up tells you it was big.
+ * It writes into its own text node from `requestAnimationFrame` and NEVER calls
+ * `setState` while animating. Invariant #3 says React must not be what runs at frame
+ * rate; the first version of this re-rendered the whole play screen sixty times a
+ * second for 260ms after every score change, and soft drop scores on every cell, so
+ * that was very nearly continuous -- competing for the same 8ms the game loop needs
+ * (NFR-PERF-01).
  *
- * Under `prefers-reduced-motion` it snaps, like everything else (NFR-A11Y-05).
+ * Under `prefers-reduced-motion` it simply shows the value (NFR-A11Y-05).
  */
 
 const DURATION_MS = 260
@@ -18,19 +20,39 @@ function prefersReduced(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-export function useCountUp(value: number): number {
-  const [shown, setShown] = useState(value)
-  const fromRef = useRef(value)
+export function AnimatedNumber({
+  value,
+  format,
+  className,
+}: {
+  value: number
+  format: (n: number) => string
+  className?: string
+}) {
+  const ref = useRef<HTMLSpanElement | null>(null)
+  const shownRef = useRef(value)
   const rafRef = useRef(0)
+  const formatRef = useRef(format)
+  formatRef.current = format
 
   useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
     if (prefersReduced()) {
-      fromRef.current = value
-      setShown(value)
+      shownRef.current = value
+      el.textContent = formatRef.current(value)
       return
     }
-    const from = fromRef.current
-    if (from === value) return
+
+    // Start from what is on screen right now, not from where the last animation
+    // began: the HUD publishes every ~100ms while this runs for 260ms, so an
+    // interrupted count-up used to visibly drop back to its old origin.
+    const from = shownRef.current
+    if (from === value) {
+      el.textContent = formatRef.current(value)
+      return
+    }
     const start = performance.now()
 
     const step = (now: number) => {
@@ -38,18 +60,21 @@ export function useCountUp(value: number): number {
       // easeOutCubic: fast at first, so a big jump reads as big immediately.
       const eased = 1 - (1 - t) ** 3
       const next = Math.round(from + (value - from) * eased)
-      setShown(next)
-      if (t < 1) {
-        rafRef.current = requestAnimationFrame(step)
-      } else {
-        fromRef.current = value
-      }
+      shownRef.current = next
+      el.textContent = formatRef.current(next)
+      if (t < 1) rafRef.current = requestAnimationFrame(step)
     }
     rafRef.current = requestAnimationFrame(step)
     return () => cancelAnimationFrame(rafRef.current)
   }, [value])
 
-  return shown
+  // Rendered once with the initial value; every later change goes through the text
+  // node above, so React does no work per frame.
+  return (
+    <span ref={ref} className={className}>
+      {format(shownRef.current)}
+    </span>
+  )
 }
 
 /** Fires once whenever `value` changes, for a one-shot CSS highlight. */

@@ -1,5 +1,6 @@
 import {
   COLS,
+  ROWS,
   TICK_HZ,
   TOP_VISIBLE_ROW,
   VISIBLE_ROWS,
@@ -9,7 +10,7 @@ import {
   shapeOf,
   type GameState,
 } from '../engine'
-import { clearPhase, type Cell, type Effects } from './effects'
+import { clearPhase, type Cell, type ClearPhase, type Effects } from './effects'
 import { BOARD_GRID, BOARD_WELL, buildSprites, type SpriteSheet } from './sprites'
 
 /**
@@ -20,8 +21,9 @@ import { BOARD_GRID, BOARD_WELL, buildSprites, type SpriteSheet } from './sprite
  * in whole ticks and never in fractions (invariant #2), so smoothness is this
  * layer's job and only this layer's job.
  *
- * The buffer rows are never drawn: rows below TOP_VISIBLE_ROW exist so pieces can
- * spawn and lock out, not to be looked at.
+ * Nothing in `draw` allocates: no closures declared per call, no object literals, no
+ * `for...of` over tuples (each of those makes an iterator per element). That is
+ * NFR-PERF-03 read literally, on the one path where it matters.
  */
 
 /** 1px logical gap between cells, which is what shows the grid line through. */
@@ -40,6 +42,9 @@ export function createBoardRenderer(canvas: HTMLCanvasElement): BoardRenderer {
   let sprites: SpriteSheet | null = null
   let cell = 0
   let dpr = 1
+
+  // Reused across frames rather than returned fresh from clearPhase.
+  const cp: ClearPhase = { active: false, flash: 0, collapse: 0 }
 
   function ensureSprites(): void {
     if (!sprites || sprites.cell !== cell || sprites.dpr !== dpr) {
@@ -62,31 +67,34 @@ export function createBoardRenderer(canvas: HTMLCanvasElement): BoardRenderer {
     ensureSprites()
   }
 
-  const step = () => cell + GAP
+  function stepPx(): number {
+    return cell + GAP
+  }
 
   function cellX(col: number): number {
-    return (GAP + col * step()) * dpr
+    return (GAP + col * stepPx()) * dpr
   }
 
   function cellY(visibleRow: number): number {
-    return (GAP + visibleRow * step()) * dpr
+    return (GAP + visibleRow * stepPx()) * dpr
   }
 
-  function blit(img: CanvasImageSource, col: number, visibleRow: number): void {
-    if (!ctx) return
-    const size = Math.round(cell * dpr)
-    // Fractional positions are the whole point of interpolation, so these are NOT
-    // rounded to whole pixels the way the static grid is.
-    ctx.drawImage(img, cellX(col), cellY(visibleRow), size, size)
+  /** Rows below `boardRow` that are about to go, for the collapse slide. */
+  function rowsClearedBelow(pending: readonly number[], boardRow: number): number {
+    let below = 0
+    for (let i = 0; i < pending.length; i++) {
+      if ((pending[i] as number) > boardRow) below++
+    }
+    return below
   }
 
-  function fillCell(col: number, visibleRow: number, style: string, alpha: number): void {
-    if (!ctx || alpha <= 0) return
+  function fillCell(col: number, visibleRow: number, style: string, a: number, yOff: number): void {
+    if (!ctx || a <= 0) return
     const size = Math.round(cell * dpr)
     const prev = ctx.globalAlpha
-    ctx.globalAlpha = Math.min(1, alpha)
+    ctx.globalAlpha = Math.min(1, a)
     ctx.fillStyle = style
-    ctx.fillRect(cellX(col), cellY(visibleRow), size, size)
+    ctx.fillRect(cellX(col), cellY(visibleRow) + yOff, size, size)
     ctx.globalAlpha = prev
   }
 
@@ -94,6 +102,7 @@ export function createBoardRenderer(canvas: HTMLCanvasElement): BoardRenderer {
     if (!ctx || !sprites) return
     const sheet = sprites
     const size = Math.round(cell * dpr)
+    const reduced = effects.reduced()
 
     ctx.setTransform(1, 0, 0, 1, 0, 0)
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -104,8 +113,10 @@ export function createBoardRenderer(canvas: HTMLCanvasElement): BoardRenderer {
     const sy = effects.shakeY() * dpr
     if (sx !== 0 || sy !== 0) ctx.setTransform(1, 0, 0, 1, sx, sy)
 
+    const bleedX = Math.abs(sx)
+    const bleedY = Math.abs(sy)
     ctx.fillStyle = BOARD_GRID
-    ctx.fillRect(-Math.abs(sx), -Math.abs(sy), canvas.width + Math.abs(sx) * 2, canvas.height + Math.abs(sy) * 2)
+    ctx.fillRect(-bleedX, -bleedY, canvas.width + bleedX * 2, canvas.height + bleedY * 2)
 
     ctx.fillStyle = BOARD_WELL
     for (let r = 0; r < VISIBLE_ROWS; r++) {
@@ -114,39 +125,34 @@ export function createBoardRenderer(canvas: HTMLCanvasElement): BoardRenderer {
       }
     }
 
-    const cp = clearPhase(state, state.cfg.clearDelay, TICK_MS)
+    clearPhase(state, state.cfg.clearDelay, TICK_MS, cp, reduced)
     const pending = state.pendingRows
 
-    /** How far a surviving row slides down while the cleared rows collapse. */
-    function collapseShift(boardRow: number): number {
-      if (!cp.active || cp.collapse <= 0) return 0
-      let below = 0
-      for (let i = 0; i < pending.length; i++) {
-        if ((pending[i] as number) > boardRow) below++
-      }
-      return below * step() * cp.collapse * dpr
-    }
+    // While rows collapse, cells from the buffer slide down into view. Starting the
+    // scan above the fringe is what stops them popping into existence at the end.
+    const overscan = cp.active ? pending.length : 0
+    const firstRow = -overscan
 
-    // Locked cells.
-    for (let r = 0; r < VISIBLE_ROWS; r++) {
+    for (let r = firstRow; r < VISIBLE_ROWS; r++) {
       const boardRow = r + TOP_VISIBLE_ROW
+      if (boardRow < 0 || boardRow >= ROWS) continue
       const clearing = cp.active && pending.includes(boardRow)
-      const shift = clearing ? 0 : collapseShift(boardRow)
+      const shift = clearing ? 0 : rowsClearedBelow(pending, boardRow) * stepPx() * cp.collapse * dpr
       for (let c = 0; c < COLS; c++) {
         const code = cellAt(state, boardRow, c)
         if (code === 0) continue
         const img = sheet.forCode(code)
         if (!img) continue
-        const x = cellX(c)
         const y = cellY(r) + shift
+        if (y + size <= 0) continue
         if (clearing) {
           // Fade the doomed row out as the rest of the stack comes down.
           const prevA = ctx.globalAlpha
           ctx.globalAlpha = Math.max(0, 1 - cp.collapse)
-          ctx.drawImage(img, x, y, size, size)
+          ctx.drawImage(img, cellX(c), y, size, size)
           ctx.globalAlpha = prevA
         } else {
-          ctx.drawImage(img, x, y, size, size)
+          ctx.drawImage(img, cellX(c), y, size, size)
         }
       }
     }
@@ -156,7 +162,7 @@ export function createBoardRenderer(canvas: HTMLCanvasElement): BoardRenderer {
       for (let i = 0; i < pending.length; i++) {
         const r = (pending[i] as number) - TOP_VISIBLE_ROW
         if (r < 0 || r >= VISIBLE_ROWS) continue
-        for (let c = 0; c < COLS; c++) fillCell(c, r, '#FFFFFF', cp.flash)
+        for (let c = 0; c < COLS; c++) fillCell(c, r, '#FFFFFF', cp.flash, 0)
       }
     }
 
@@ -169,7 +175,7 @@ export function createBoardRenderer(canvas: HTMLCanvasElement): BoardRenderer {
         const t = effects.trailCells[i] as Cell
         const r = t.row - TOP_VISIBLE_ROW
         if (r < 0 || r >= VISIBLE_ROWS) continue
-        fillCell(t.col, r, '#F4F5F7', trailA * 0.35)
+        fillCell(t.col, r, '#F4F5F7', trailA * 0.35, 0)
       }
     }
 
@@ -182,23 +188,24 @@ export function createBoardRenderer(canvas: HTMLCanvasElement): BoardRenderer {
         const f = effects.flashCells[i] as Cell
         const r = f.row - TOP_VISIBLE_ROW
         if (r < 0 || r >= VISIBLE_ROWS) continue
-        fillCell(f.col, r, '#FFFFFF', flashA * 0.85)
+        fillCell(f.col, r, '#FFFFFF', flashA * 0.85, 0)
       }
     }
 
     const active = state.active
     if (!active || state.phase === 'gameOver') return
 
-    const shape = shapeOf(active.kind, active.rot)
+    const cells = shapeOf(active.kind, active.rot).cells
 
     // The ghost snaps to the grid: it marks a landing square, and a ghost that
     // slides is a ghost that lies about where the piece will end up.
     const drop = dropDistance(state.board, active)
     if (drop > 0) {
-      for (const [dc, dr] of shape.cells) {
-        const r = active.row + dr + drop - TOP_VISIBLE_ROW
+      for (let i = 0; i < cells.length; i++) {
+        const c = cells[i] as readonly [number, number]
+        const r = active.row + c[1] + drop - TOP_VISIBLE_ROW
         if (r < 0 || r >= VISIBLE_ROWS) continue
-        blit(sheet.ghost, active.col + dc, r)
+        ctx.drawImage(sheet.ghost, cellX(active.col + c[0]), cellY(r), size, size)
       }
     }
 
@@ -206,10 +213,11 @@ export function createBoardRenderer(canvas: HTMLCanvasElement): BoardRenderer {
     if (!img) return
     const pc = effects.pieceCol(state, alpha)
     const pr = effects.pieceRow(state, alpha)
-    for (const [dc, dr] of shape.cells) {
-      const r = pr + dr - TOP_VISIBLE_ROW
+    for (let i = 0; i < cells.length; i++) {
+      const c = cells[i] as readonly [number, number]
+      const r = pr + c[1] - TOP_VISIBLE_ROW
       if (r < -1 || r >= VISIBLE_ROWS) continue
-      blit(img, pc + dc, r)
+      ctx.drawImage(img, cellX(pc + c[0]), cellY(r), size, size)
     }
   }
 
