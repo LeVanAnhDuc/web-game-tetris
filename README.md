@@ -42,8 +42,17 @@ omission.
 
 Every push to `main` creates a GitHub Release by itself
 ([`.github/workflows/release.yml`](.github/workflows/release.yml)), and deploys to
-GitHub Pages ([`deploy.yml`](.github/workflows/deploy.yml)). Pull requests run tests
-and a build first ([`ci.yml`](.github/workflows/ci.yml)).
+**<https://levananhduc.github.io/web-game-tetris/>**
+([`deploy.yml`](.github/workflows/deploy.yml)). Pull requests run tests, a build and
+an audit first ([`ci.yml`](.github/workflows/ci.yml)).
+
+Pages has to be enabled **once per repository** before the first deploy can succeed —
+`configure-pages` cannot do it for you, because `GITHUB_TOKEN` is not allowed to
+create a Pages site:
+
+```bash
+gh api -X POST repos/<owner>/<repo>/pages -f build_type=workflow
+```
 
 **The version comes from your commit subjects**, so they have to follow Conventional
 Commits. The whole range since the previous tag is scanned, so one `feat:` anywhere

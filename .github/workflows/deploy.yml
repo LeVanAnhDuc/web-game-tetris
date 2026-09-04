@@ -31,8 +31,11 @@ jobs:
       # .env.example says the project reads no environment variables -- the base
       # is build configuration, not an env var (ADR-0011).
       - run: npm run build
-      # `enablement` turns Pages on via the API if it is not on yet, so the repo
-      # needs no manual visit to Settings before the first deploy.
+      # `enablement` does NOT replace enabling Pages once for the repository.
+      # Tried on the first deploy here and it failed: GITHUB_TOKEN cannot create a
+      # Pages site -- "Resource not accessible by integration". It is kept because
+      # it costs nothing and helps a fork whose owner has already enabled Pages.
+      # The one-time step is in README §Releases and versioning.
       - uses: actions/configure-pages@v5
         with:
           enablement: true
