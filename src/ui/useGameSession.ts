@@ -49,7 +49,10 @@ const EMPTY_HUD: HudSnapshot = {
   topOutReason: null,
 }
 
-export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
+export function useGameSession(
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  keyboardEnabled = true,
+) {
   const { settings, loading } = useSettings()
   const [hud, setHud] = useState<HudSnapshot>(EMPTY_HUD)
   const sendRef = useRef<(cmd: Command) => void>(() => {})
@@ -61,6 +64,10 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
   const effectsRef = useRef<ReturnType<typeof createEffects> | null>(null)
   const settingsRef = useRef(settings)
   settingsRef.current = settings
+  const keyboardEnabledRef = useRef(keyboardEnabled)
+  keyboardEnabledRef.current = keyboardEnabled
+  /** Live phase, for callers that must not act on a HUD snapshot up to 100ms old. */
+  const phaseRef = useRef<Phase>('playing')
 
   useEffect(() => {
     const canvas: HTMLCanvasElement | null = canvasRef.current
@@ -91,6 +98,8 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
     }
 
     let sinceHud = HUD_EVERY_TICKS
+    let lastDrawnPhase: Phase | null = null
+    let lastPublishedPhase: Phase | null = null
 
     function publish(force = false): void {
       if (!force && sinceHud < HUD_EVERY_TICKS) return
@@ -152,8 +161,22 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
       },
       draw: (alpha, dtMs) => {
         effects.advance(dtMs)
-        renderer.draw(session.state, alpha, effects)
-        publish()
+        const phase = session.state.phase
+        const idle = phase === 'paused' || phase === 'gameOver'
+        // A paused board cannot change, so repainting it sixty times a second buys
+        // nothing and costs the most when a dialog with a backdrop blur is over it.
+        // One frame on entering the state, then nothing until it changes.
+        if (!idle || phase !== lastDrawnPhase) {
+          renderer.draw(session.state, alpha, effects)
+          lastDrawnPhase = phase
+        }
+        if (idle) {
+          if (phase !== lastPublishedPhase) publish(true)
+        } else {
+          publish()
+        }
+        lastPublishedPhase = phase
+        phaseRef.current = phase
       },
       // A hidden tab pauses the game rather than dropping pieces unseen
       // (NFR-REL-01). Sent as a command so the engine stays the only thing that
@@ -167,7 +190,13 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
       },
     })
 
-    const keyboard = createKeyboardInput(session.send, settingsRef.current.bindings)
+    // Read through functions so neither a rebind nor a dialog opening rebuilds the
+    // session -- rebuilding it starts a new round and discards the current one.
+    const keyboard = createKeyboardInput(
+      session.send,
+      () => settingsRef.current.bindings,
+      () => keyboardEnabledRef.current,
+    )
     keyboard.attach()
 
     fitBoard()
@@ -195,7 +224,9 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
     // Rebuilt when the KEY BINDINGS change, because the keyboard listener closes
     // over them, and when loading finishes so the first round uses saved settings.
     // Not on every settings change: the live handles below cover the rest.
-  }, [canvasRef, loading, settings.bindings])
+    // Rebuilt only when the canvas changes or the first settings load finishes.
+    // Bindings and the keyboard-enabled flag are read live, not captured.
+  }, [canvasRef, loading])
 
   // Applied live -- these are presentation, so they need no new round.
   useEffect(() => {
@@ -220,5 +251,7 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
     [],
   )
 
-  return { hud, send, press, restart }
+  const livePhase = useCallback(() => phaseRef.current, [])
+
+  return { hud, send, press, restart, livePhase }
 }

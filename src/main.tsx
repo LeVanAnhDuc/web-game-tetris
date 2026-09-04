@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { I18nProvider } from './i18n'
 import { SettingsProvider, useSettings } from './settings'
@@ -15,7 +15,11 @@ if (!root) throw new Error('#root is missing from index.html')
  */
 function App() {
   const { settings } = useSettings()
-  document.documentElement.lang = settings.locale
+  // In an effect, not the render body: writing to the document while rendering is a
+  // side effect React is free to run twice or discard.
+  useEffect(() => {
+    document.documentElement.lang = settings.locale
+  }, [settings.locale])
   return (
     <I18nProvider locale={settings.locale}>
       <PlayScreen />

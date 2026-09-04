@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Action } from '../engine'
 import { useI18n, type MessageKey } from '../i18n'
 import { useSettings } from '../settings'
@@ -99,7 +99,7 @@ function Bindings() {
                 setCapturing(action)
               }}
             >
-              {capturing === action ? t('settings.pressKey') : codes.map(keyLabel).join(' / ') || '—'}
+              {capturing === action ? t('settings.pressKey') : codes.map(keyLabel).join(' / ') || t('settings.unbound')}
             </button>
           </div>
         )
@@ -114,17 +114,66 @@ function Bindings() {
 }
 
 export function SettingsScreen({ onClose }: { onClose: () => void }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const { settings, update, reset, status } = useSettings()
+  // Numbers follow the chosen locale, like every other number in the app
+  // (NFR-I18N-03).
+  const nf = useMemo(() => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }), [locale])
+  const pct = useMemo(() => new Intl.NumberFormat(locale, { style: 'percent' }), [locale])
   const closeRef = useRef<HTMLButtonElement | null>(null)
+  const panelRef = useRef<HTMLDivElement | null>(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
+    returnFocusRef.current = document.activeElement as HTMLElement | null
     closeRef.current?.focus()
+    const previous = returnFocusRef.current
+    return () => previous?.focus?.()
   }, [])
+
+  /**
+   * Escape closes the dialog, and a Tab off either end wraps.
+   *
+   * Without the Escape handler the key fell through to the game's own listener,
+   * which maps it to pause -- so Escape RESUMED the game behind an opaque dialog
+   * while the paused modal stayed hidden, and nothing on screen said it was running.
+   * Without the wrap, Tab walked out of the dialog into the board behind it, which
+   * `aria-modal` alone does not prevent (NFR-A11Y-02).
+   */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const panel = panelRef.current
+      if (!panel) return
+      if (e.key === 'Escape') {
+        // While capturing a key, Escape belongs to the capture (it cancels it).
+        if (panel.querySelector('[data-capturing="true"]')) return
+        e.preventDefault()
+        e.stopPropagation()
+        onClose()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const focusable = panel.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )
+      if (focusable.length === 0) return
+      const first = focusable[0] as HTMLElement
+      const last = focusable[focusable.length - 1] as HTMLElement
+      if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      } else if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      }
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [onClose])
 
   return (
     <div className="overlay" role="dialog" aria-modal="true" aria-label={t('action.settings')}>
-      <div className="modal modal--wide">
+      <div className="modal modal--wide" ref={panelRef}>
         <div className="modal__head">
           <h2 className="modal__title">{t('action.settings')}</h2>
           <button ref={closeRef} type="button" className="icon-btn" aria-label={t('settings.close')} onClick={onClose}>
@@ -164,7 +213,7 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             {settings.difficulty === 'custom' ? (
               <Row
                 label={t('settings.fallSpeed')}
-                hint={t('settings.fallSpeedHint', { n: settings.customCellsPerSecond.toFixed(2) })}
+                hint={t('settings.fallSpeedHint', { n: nf.format(settings.customCellsPerSecond) })}
               >
                 <input
                   className="slider"
@@ -239,7 +288,7 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             <Row label={t('settings.sound')}>
               <Toggle on={settings.sound} onChange={(v) => update({ sound: v })} label={t('settings.sound')} />
             </Row>
-            <Row label={t('settings.volume')} hint={`${Math.round(settings.volume * 100)}%`}>
+            <Row label={t('settings.volume')} hint={pct.format(settings.volume)}>
               <input
                 className="slider"
                 type="range"

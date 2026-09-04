@@ -63,5 +63,6 @@
   "settings.sound": "Sound effects",
   "settings.volume": "Volume",
   "settings.storageUnavailable": "This browser will not let the game save settings, so they last until you close the tab.",
-  "settings.storageRecovered": "Saved settings could not be read in full and were restored where possible."
+  "settings.storageRecovered": "Saved settings could not be read in full and were restored where possible.",
+  "settings.unbound": "Not bound"
 }

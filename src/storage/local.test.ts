@@ -107,3 +107,28 @@ describe('settings repository', () => {
     expect(await repo.save(defaultSettings('en'))).toBe('unavailable')
   })
 })
+
+describe('bindings are a complete set, not an overlay', () => {
+  it('lets a player actually unbind a default key', async () => {
+    // Hard drop moved from Space to F: the saved map has no Space entry.
+    const stored = { schemaVersion: 1, bindings: { KeyF: 'hardDrop', ArrowLeft: 'left', ArrowRight: 'right', ArrowDown: 'softDrop', KeyZ: 'rotCCW', KeyX: 'rotCW', ShiftLeft: 'hold', Escape: 'pause' } }
+    const repo = createSettingsRepository(memory(JSON.stringify(stored)))
+    const { settings } = await repo.load('en')
+    expect(settings.bindings.KeyF).toBe('hardDrop')
+    // Overlaying on the defaults used to hand Space back, silently giving the
+    // player two keys for the same action.
+    expect(settings.bindings.Space).toBeUndefined()
+  })
+
+  it('gives an action its default keys back if it lost every one', async () => {
+    // A stored map with no `pause` at all: without a repair the player would have
+    // no way to pause or to reach settings.
+    const stored = { schemaVersion: 1, bindings: { ArrowLeft: 'left' } }
+    const repo = createSettingsRepository(memory(JSON.stringify(stored)))
+    const { settings } = await repo.load('en')
+    const actions = new Set(Object.values(settings.bindings))
+    expect(actions.has('pause')).toBe(true)
+    expect(actions.has('hardDrop')).toBe(true)
+    expect(settings.bindings.ArrowLeft).toBe('left')
+  })
+})

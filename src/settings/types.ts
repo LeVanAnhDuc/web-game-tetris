@@ -123,16 +123,29 @@ export function migrateSettings(raw: unknown, locale: Locale): Settings {
   if (typeof raw !== 'object' || raw === null) return base
   const r = raw as Partial<Settings> & Record<string, unknown>
 
-  const bindings: Record<string, Action> = { ...base.bindings }
+  // Stored bindings REPLACE the defaults rather than layering over them. Overlaying
+  // made unbinding impossible: moving hard drop from Space to F saved a map with no
+  // Space entry, and the next load restored Space from the defaults, so the player
+  // silently got their old key back alongside the new one.
+  let bindings: Record<string, Action> = { ...base.bindings }
   if (typeof r.bindings === 'object' && r.bindings !== null) {
     const known = new Set<string>(BINDABLE_ACTIONS)
+    const stored: Record<string, Action> = {}
     for (const [code, action] of Object.entries(r.bindings as Record<string, unknown>)) {
       // A binding for an action this version no longer has is dropped, not kept:
-      // keeping it would make the rebinding screen show a key that does nothing.
+      // keeping it would show a key that does nothing.
       if (typeof code === 'string' && typeof action === 'string' && known.has(action)) {
-        bindings[code] = action as Action
+        stored[code] = action as Action
       }
     }
+    // An action with no key at all is unreachable, so any that lost every binding
+    // gets its defaults back -- including `pause`, whose keys are the only way out
+    // of a paused game.
+    const covered = new Set(Object.values(stored))
+    for (const [code, action] of Object.entries(base.bindings)) {
+      if (!covered.has(action)) stored[code] = action
+    }
+    if (Object.keys(stored).length > 0) bindings = stored
   }
 
   const difficulty: Difficulty =

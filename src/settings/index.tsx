@@ -32,16 +32,24 @@ export function SettingsProvider({
   children: ReactNode
   repository?: SettingsRepository
 }) {
-  const repoRef = useRef<SettingsRepository>(repository ?? createSettingsRepository())
+  // Lazily built: passing the call as the argument runs it on every render and
+  // throws the result away, and building the default repository probes storage.
+  const repoRef = useRef<SettingsRepository | null>(repository ?? null)
+  if (repoRef.current === null) repoRef.current = createSettingsRepository()
   const initialLocale = useRef(detectLocale())
   const [settings, setSettings] = useState<Settings>(() => defaultSettings(initialLocale.current))
   const [status, setStatus] = useState<StorageStatus>('ok')
   const [loading, setLoading] = useState(true)
 
+  /** Mirrors `settings` for callbacks that must not close over a stale render. */
+  const latest = useRef(settings)
+  latest.current = settings
+
   useEffect(() => {
     let alive = true
-    void repoRef.current.load(initialLocale.current).then((r) => {
+    void repoRef.current?.load(initialLocale.current).then((r) => {
       if (!alive) return
+      latest.current = r.settings
       setSettings(r.settings)
       setStatus(r.status)
       setLoading(false)
@@ -52,19 +60,22 @@ export function SettingsProvider({
   }, [])
 
   const update = useCallback((patch: Partial<Settings>) => {
-    setSettings((prev) => {
-      const next = { ...prev, ...patch }
-      // Fire and forget: a failed write must not block the UI, and `status` is how
-      // the player finds out (NFR-REL-05).
-      void repoRef.current.save(next).then(setStatus)
-      return next
-    })
+    // Computed OUTSIDE the state updater. React may invoke an updater more than
+    // once -- StrictMode always does -- and a write living inside it therefore hit
+    // localStorage twice for every single change.
+    const next = { ...latest.current, ...patch }
+    latest.current = next
+    setSettings(next)
+    // Fire and forget: a failed write must not block the UI, and `status` is how
+    // the player finds out (NFR-REL-05).
+    void repoRef.current?.save(next).then(setStatus)
   }, [])
 
   const reset = useCallback(() => {
     const next = defaultSettings(initialLocale.current)
+    latest.current = next
     setSettings(next)
-    void repoRef.current.save(next).then(setStatus)
+    void repoRef.current?.save(next).then(setStatus)
   }, [])
 
   const value = useMemo<SettingsValue>(

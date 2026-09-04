@@ -29,9 +29,19 @@ export interface KeyboardInput {
   detach(): void
 }
 
+/**
+ * `bindings` is read through a function, not captured by value: rebinding a key must
+ * not force this listener to be rebuilt, because rebuilding it meant rebuilding the
+ * whole session and throwing away the round the player had paused to rebind in.
+ *
+ * `enabled` lets a dialog take the keyboard back. Without it this listener calls
+ * `preventDefault` on arrows and Space no matter what has focus, which makes every
+ * slider unusable and every button un-pressable with Space (NFR-A11Y-02).
+ */
 export function createKeyboardInput(
   send: (cmd: Command) => void,
-  bindings: Readonly<Record<string, Action>> = DEFAULT_BINDINGS,
+  getBindings: () => Readonly<Record<string, Action>> = () => DEFAULT_BINDINGS,
+  enabled: () => boolean = () => true,
   target: Window = window,
 ): KeyboardInput {
   /** Which actions are currently down, so a repeat keydown is not a second press. */
@@ -42,8 +52,16 @@ export function createKeyboardInput(
     down.clear()
   }
 
+  /** Typing in a control is not playing the game. */
+  function isFormControl(node: EventTarget | null): boolean {
+    const el = node as HTMLElement | null
+    if (!el || typeof el.closest !== 'function') return false
+    return el.closest('input, textarea, select, [contenteditable="true"], [role="dialog"]') !== null
+  }
+
   function onKeyDown(ev: KeyboardEvent): void {
-    const action = bindings[ev.code]
+    if (!enabled() || isFormControl(ev.target)) return
+    const action = getBindings()[ev.code]
     if (!action) return
     // Space and the arrows scroll the page otherwise, and Space is hard drop.
     ev.preventDefault()
@@ -55,7 +73,10 @@ export function createKeyboardInput(
   }
 
   function onKeyUp(ev: KeyboardEvent): void {
-    const action = bindings[ev.code]
+    // A release is honoured even while disabled: a key held when a dialog opened
+    // must still come up, or the piece slides into the wall forever.
+    if (isFormControl(ev.target)) return
+    const action = getBindings()[ev.code]
     if (!action) return
     ev.preventDefault()
     if (!down.delete(action)) return

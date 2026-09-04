@@ -63,5 +63,6 @@
   "settings.sound": "Hiệu ứng âm thanh",
   "settings.volume": "Âm lượng",
   "settings.storageUnavailable": "Trình duyệt không cho lưu thiết lập, nên chúng chỉ còn đến khi bạn đóng tab.",
-  "settings.storageRecovered": "Thiết lập đã lưu không đọc được trọn vẹn và đã được khôi phục ở mức có thể."
+  "settings.storageRecovered": "Thiết lập đã lưu không đọc được trọn vẹn và đã được khôi phục ở mức có thể.",
+  "settings.unbound": "Chưa gán"
 }
