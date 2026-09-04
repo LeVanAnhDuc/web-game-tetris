@@ -1,0 +1,9 @@
+# The repo is developed on Windows and its CI runs on Linux. Without this, a shell
+# script committed from here carries a CR at the end of every line and bash on the
+# runner fails on the first one -- silently enough that the workflow log blames the
+# script's contents rather than its line endings.
+* text=auto
+
+*.sh  text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
