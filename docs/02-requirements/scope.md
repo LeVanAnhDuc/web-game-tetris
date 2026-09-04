@@ -54,3 +54,10 @@ KHÔNG chứa: cách hiện thực, ngưỡng phi chức năng (-> nfr.md), lý 
 | FR-32 | Điểm cao cục bộ theo từng chế độ | US-03 | chưa |
 | FR-33 | Hiển thị thời điểm đạt điểm theo locale đang chọn | US-03 | chưa |
 | FR-34 | Định danh cục bộ bằng nickname | US-03 | chưa |
+| FR-35 | Khối rơi mượt dưới mức ô (nội suy `gravityAcc`) | US-01 | xong |
+| FR-36 | Di chuyển ngang có tween ngắn | US-01 | xong |
+| FR-37 | Nháy sáng khi khối chốt | US-01 | xong |
+| FR-38 | Vệt mờ sau khi thả tức thì | US-01 | xong |
+| FR-39 | Xoá hàng: nháy trắng rồi các hàng trên trượt xuống | US-01 | xong |
+| FR-40 | Rung bàn chơi khi xoá 4 hàng | US-01 | xong |
+| FR-41 | HUD: điểm đếm tăng dần, nháy khi lên cấp | US-01 | xong |

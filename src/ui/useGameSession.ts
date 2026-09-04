@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { TICK_HZ, type Command, type Kind, type Phase, type TopOutReason } from '../engine'
 import { createKeyboardInput } from '../input/keyboard'
 import { createBoardRenderer } from '../render/canvas'
+import { createEffects } from '../render/effects'
 import { createLoop } from '../runtime/loop'
 import { createSession } from '../runtime/session'
 
@@ -57,6 +58,9 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
     const el = canvas
 
     const renderer = createBoardRenderer(canvas)
+    // The renderer's visual memory (ADR-0012). Created here so its lifetime matches
+    // the canvas exactly -- it is torn down with the effect below.
+    const effects = createEffects()
     // Only the SEED comes from the clock, and it comes from out here -- the engine
     // itself never reads one (invariant #1).
     const session = createSession(Date.now() >>> 0)
@@ -112,16 +116,22 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
       const width = box.width - rails - padX - 14
       const height = box.height - padY - 14
       renderer.resize(Math.max(40, width), Math.max(80, height))
-      renderer.draw(session.state)
+      renderer.draw(session.state, 1, effects)
     }
 
     const loop = createLoop({
       tick: () => {
-        session.tick()
+        // BEFORE the engine steps: `reduce` locks a piece and spawns the next one in
+        // the same call, so anything the effects need about the piece that just
+        // locked has to be captured here.
+        effects.beforeTick(session.state)
+        const events = session.tick()
+        effects.onTick(session.state, events)
         sinceHud++
       },
-      draw: () => {
-        renderer.draw(session.state)
+      draw: (alpha, dtMs) => {
+        effects.advance(dtMs)
+        renderer.draw(session.state, alpha, effects)
         publish()
       },
       // A hidden tab pauses the game rather than dropping pieces unseen
@@ -150,6 +160,7 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
 
     return () => {
       loop.stop()
+      effects.dispose()
       keyboard.detach()
       observer.disconnect()
       window.removeEventListener('resize', fitBoard)

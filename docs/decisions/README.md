@@ -18,7 +18,8 @@
 | [ADR-0008](0008-achromatic-chrome-board-only-colour.md) | Chrome phi sắc, màu chỉ tồn tại trong bàn chơi | 2026-09-03 | accepted |
 | [ADR-0009](0009-bevelled-cells-and-framed-well.md) | Ô bàn chơi có vát cạnh, ghost là đường viền, bàn chơi nằm trong khung well | 2026-09-03 | accepted |
 | [ADR-0010](0010-reduce-mutates-state-in-place.md) | `reduce` sửa state tại chỗ, không copy | 2026-09-03 | accepted |
-| [ADR-0011](0011-ci-release-and-pages.md) | CI, release tự động từ commit, và deploy Pages | 2026-09-03 | accepted |
+| [ADR-0011](0011-ci-release-and-pages.md) | CI, release tự động từ commit, và deploy Pages | 2026-09-04 | accepted |
+| [ADR-0012](0012-render-holds-visual-memory.md) | `render/` được giữ bộ nhớ thị giác | 2026-09-04 | accepted |
 <!-- END:auto -->
 
 Trạng thái: `accepted` · `superseded by ADR-00xx` · `deprecated`

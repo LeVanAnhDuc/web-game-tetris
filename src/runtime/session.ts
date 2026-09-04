@@ -22,8 +22,12 @@ export interface Session {
   readonly state: GameState
   /** Queue a command for the next tick. */
   send(cmd: Command): void
-  /** Advance exactly one tick, draining the queue into the engine. */
-  tick(): void
+  /**
+   * Advance exactly one tick, draining the queue into the engine, and hand back the
+   * events it produced. The renderer needs them to trigger effects, and returning
+   * them costs nothing next to a second subscription.
+   */
+  tick(): readonly GameEvent[]
   subscribe(fn: SessionListener): () => void
   getReplay(): Replay
   restart(seed?: number): void
@@ -35,7 +39,7 @@ export function createSession(seed: number): Session {
   let queue: Command[] = []
   const listeners = new Set<SessionListener>()
 
-  function tick(): void {
+  function tick(): readonly GameEvent[] {
     const cmds = queue
     queue = cmds.length > 0 ? [] : cmds
     if (cmds.length > 0) recorder.record(state.tick, cmds)
@@ -44,6 +48,7 @@ export function createSession(seed: number): Session {
     if (events.length > 0) {
       for (const fn of listeners) fn(events, state)
     }
+    return events
   }
 
   return {

@@ -22,6 +22,10 @@ against how it looks on screen.
 - Pause and resume, and an automatic pause when the tab goes to the background so a
   game is never lost to a tab switch.
 - Bilingual interface, English and Vietnamese, detected from the browser.
+- Motion that reads as motion: pieces fall sub-cell rather than stepping a whole row
+  at a time, sideways moves travel, a hard drop leaves a trail, a completed row
+  flashes before the stack collapses onto it, and a tetris shakes the board. All of
+  it collapses to instant state changes under `prefers-reduced-motion`.
 
 ## Running it
 
