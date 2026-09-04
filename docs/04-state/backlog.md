@@ -18,16 +18,17 @@ KHÔNG chứa: tính năng ngoài phạm vi (-> 01-product/overview.md §Non-Goa
 
 ## Đang làm
 
-Đang chạy loạt 4 gói theo yêu cầu: **A animation** (xong, đang merge) → **B settings +
-lưu trữ** → **C âm thanh** → **D độ khó + tốc độ tuỳ chỉnh**.
+**Không có việc nào đang dở.**
 
-Gói A: FR-35→FR-41, ADR-0012. Engine không đổi một dòng — nội suy nằm hoàn toàn ở
-`render/effects.ts`.
+Loạt 4 gói theo yêu cầu đã xong: **A animation** (FR-35→41, ADR-0012, đã merge) và
+**B+C+D settings / âm thanh / độ khó** (FR-17, FR-23→30, FR-42→44, ADR-0013).
 
-**Bài học đã trả giá:** bản nội suy đầu tiên *có test xanh* nhưng **không hoạt động** —
-nó nội suy giữa hai tick, mà ở cấp 1 khối chỉ đổi hàng mỗi 60 tick. Phát hiện bằng
-cách đo canvas trên browser thật (45 frame chỉ có 1 vị trí). Thứ mang thông tin
-dưới-mức-ô là `gravityAcc` của engine.
+B, C và D nằm chung một branch dù thứ tự đã chốt là ba đợt: C và D không tồn tại được
+nếu không có màn Settings của B, nên tách branch chỉ tạo thêm hai vòng CI mà không
+tách được rủi ro. Ba commit riêng, một PR.
+
+**Hệ quả phải nhớ:** điểm số giữa các độ khó **không so được với nhau**. Bảng điểm cao
+(FR-32) phải tách theo độ khó, nếu không nó chỉ đo được ai chọn Dễ (ADR-0013 §4).
 
 ## Việc tiếp theo
 

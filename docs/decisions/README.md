@@ -20,6 +20,7 @@
 | [ADR-0010](0010-reduce-mutates-state-in-place.md) | `reduce` sửa state tại chỗ, không copy | 2026-09-03 | accepted |
 | [ADR-0011](0011-ci-release-and-pages.md) | CI, release tự động từ commit, và deploy Pages | 2026-09-04 | accepted |
 | [ADR-0012](0012-render-holds-visual-memory.md) | `render/` được giữ bộ nhớ thị giác | 2026-09-04 | accepted |
+| [ADR-0013](0013-settings-schema-and-fall-speed.md) | Thiết lập có schemaVersion, và tốc độ rơi là config của engine | 2026-09-04 | accepted |
 <!-- END:auto -->
 
 Trạng thái: `accepted` · `superseded by ADR-00xx` · `deprecated`

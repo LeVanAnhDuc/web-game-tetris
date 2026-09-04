@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { TICK_HZ, type Command, type Kind, type Phase, type TopOutReason } from '../engine'
+import { createSfx } from '../audio'
 import { createKeyboardInput } from '../input/keyboard'
 import { createBoardRenderer } from '../render/canvas'
 import { createEffects } from '../render/effects'
 import { createLoop } from '../runtime/loop'
 import { createSession } from '../runtime/session'
+import { settingsToConfig, useSettings } from '../settings'
 
 /**
  * Wires the game to React without letting React drive it.
@@ -47,10 +49,25 @@ const EMPTY_HUD: HudSnapshot = {
   topOutReason: null,
 }
 
-export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
+export function useGameSession(
+  canvasRef: React.RefObject<HTMLCanvasElement | null>,
+  keyboardEnabled = true,
+) {
+  const { settings, loading } = useSettings()
   const [hud, setHud] = useState<HudSnapshot>(EMPTY_HUD)
   const sendRef = useRef<(cmd: Command) => void>(() => {})
   const restartRef = useRef<() => void>(() => {})
+
+  // Live handles, so changing a setting takes effect without tearing the game down.
+  const sfxRef = useRef<ReturnType<typeof createSfx> | null>(null)
+  const rendererRef = useRef<ReturnType<typeof createBoardRenderer> | null>(null)
+  const effectsRef = useRef<ReturnType<typeof createEffects> | null>(null)
+  const settingsRef = useRef(settings)
+  settingsRef.current = settings
+  const keyboardEnabledRef = useRef(keyboardEnabled)
+  keyboardEnabledRef.current = keyboardEnabled
+  /** Live phase, for callers that must not act on a HUD snapshot up to 100ms old. */
+  const phaseRef = useRef<Phase>('playing')
 
   useEffect(() => {
     const canvas: HTMLCanvasElement | null = canvasRef.current
@@ -58,19 +75,31 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
     const el = canvas
 
     const renderer = createBoardRenderer(canvas)
+    rendererRef.current = renderer
+    renderer.setOptions({ ghost: settingsRef.current.ghost, colorBlind: settingsRef.current.colorBlindMode })
+    const sfx = createSfx(settingsRef.current.sound, settingsRef.current.volume)
+    sfxRef.current = sfx
     // The renderer's visual memory (ADR-0012). Created here so its lifetime matches
     // the canvas exactly -- it is torn down with the effect below.
     const effects = createEffects()
+    effects.setSmoothHorizontal(settingsRef.current.smoothHorizontal)
+    effectsRef.current = effects
     // Only the SEED comes from the clock, and it comes from out here -- the engine
     // itself never reads one (invariant #1).
-    const session = createSession(Date.now() >>> 0)
+    // Difficulty and DAS/ARR are engine config, so they are fixed for the round --
+     // changing the fall speed mid-game would make the replay describe something
+     // that never happened (ADR-0013). The settings screen pauses, so the natural
+     // moment to adopt them is the next round.
+    const session = createSession(Date.now() >>> 0, settingsToConfig(settingsRef.current))
     sendRef.current = session.send
     restartRef.current = () => {
-      session.restart()
+      session.restart(Date.now() >>> 0, settingsToConfig(settingsRef.current))
       publish(true)
     }
 
     let sinceHud = HUD_EVERY_TICKS
+    let lastDrawnPhase: Phase | null = null
+    let lastPublishedPhase: Phase | null = null
 
     function publish(force = false): void {
       if (!force && sinceHud < HUD_EVERY_TICKS) return
@@ -127,12 +156,27 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
         effects.beforeTick(session.state)
         const events = session.tick()
         effects.onTick(session.state, events)
+        if (events.length > 0) sfx.play(events)
         sinceHud++
       },
       draw: (alpha, dtMs) => {
         effects.advance(dtMs)
-        renderer.draw(session.state, alpha, effects)
-        publish()
+        const phase = session.state.phase
+        const idle = phase === 'paused' || phase === 'gameOver'
+        // A paused board cannot change, so repainting it sixty times a second buys
+        // nothing and costs the most when a dialog with a backdrop blur is over it.
+        // One frame on entering the state, then nothing until it changes.
+        if (!idle || phase !== lastDrawnPhase) {
+          renderer.draw(session.state, alpha, effects)
+          lastDrawnPhase = phase
+        }
+        if (idle) {
+          if (phase !== lastPublishedPhase) publish(true)
+        } else {
+          publish()
+        }
+        lastPublishedPhase = phase
+        phaseRef.current = phase
       },
       // A hidden tab pauses the game rather than dropping pieces unseen
       // (NFR-REL-01). Sent as a command so the engine stays the only thing that
@@ -146,7 +190,13 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
       },
     })
 
-    const keyboard = createKeyboardInput(session.send)
+    // Read through functions so neither a rebind nor a dialog opening rebuilds the
+    // session -- rebuilding it starts a new round and discards the current one.
+    const keyboard = createKeyboardInput(
+      session.send,
+      () => settingsRef.current.bindings,
+      () => keyboardEnabledRef.current,
+    )
     keyboard.attach()
 
     fitBoard()
@@ -161,13 +211,36 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
     return () => {
       loop.stop()
       effects.dispose()
+      effectsRef.current = null
+      sfx.dispose()
+      sfxRef.current = null
+      rendererRef.current = null
       keyboard.detach()
       observer.disconnect()
       window.removeEventListener('resize', fitBoard)
       sendRef.current = () => {}
       restartRef.current = () => {}
     }
-  }, [canvasRef])
+    // Rebuilt when the KEY BINDINGS change, because the keyboard listener closes
+    // over them, and when loading finishes so the first round uses saved settings.
+    // Not on every settings change: the live handles below cover the rest.
+    // Rebuilt only when the canvas changes or the first settings load finishes.
+    // Bindings and the keyboard-enabled flag are read live, not captured.
+  }, [canvasRef, loading])
+
+  // Applied live -- these are presentation, so they need no new round.
+  useEffect(() => {
+    sfxRef.current?.setEnabled(settings.sound)
+    sfxRef.current?.setVolume(settings.volume)
+  }, [settings.sound, settings.volume])
+
+  useEffect(() => {
+    rendererRef.current?.setOptions({ ghost: settings.ghost, colorBlind: settings.colorBlindMode })
+  }, [settings.ghost, settings.colorBlindMode])
+
+  useEffect(() => {
+    effectsRef.current?.setSmoothHorizontal(settings.smoothHorizontal)
+  }, [settings.smoothHorizontal])
 
   const send = useCallback((cmd: Command) => sendRef.current(cmd), [])
   const restart = useCallback(() => restartRef.current(), [])
@@ -178,5 +251,7 @@ export function useGameSession(canvasRef: React.RefObject<HTMLCanvasElement | nu
     [],
   )
 
-  return { hud, send, press, restart }
+  const livePhase = useCallback(() => phaseRef.current, [])
+
+  return { hud, send, press, restart, livePhase }
 }

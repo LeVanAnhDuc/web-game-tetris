@@ -17,6 +17,8 @@ export const TOP_VISIBLE_ROW = BUFFER_ROWS
 export const MAX_TICKS_PER_FRAME = 5
 
 export const DEFAULT_CONFIG: Config = {
+  gravityScale: 1,
+  fixedCellsPerSecond: null,
   /** 500ms at 60Hz (FR-09). */
   lockDelay: 30,
   /** Invariant #8: without a cap, a player stalls forever and the game never ends. */

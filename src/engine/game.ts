@@ -18,7 +18,7 @@ import {
   scoreForClear,
 } from './scoring'
 import { rotateCCW, rotateCW, tryKicks } from './srs'
-import { gravityCellsPerTick, levelFromLines, softDropCellsPerTick } from './timing'
+import { effectiveGravity, effectiveSoftDrop, levelFromLines } from './timing'
 import type { Command, Config, GameEvent, GameState, Kind, Rot, SpinKind } from './types'
 
 /**
@@ -372,9 +372,7 @@ function stepGravity(s: GameState): void {
   if (!a) return
   const { level } = s.stats
   const soft = s.held.softDrop
-  const rate = soft
-    ? softDropCellsPerTick(level, s.cfg.maxLevel, s.cfg.softDropFactor)
-    : gravityCellsPerTick(level, s.cfg.maxLevel)
+  const rate = soft ? effectiveSoftDrop(s.cfg, level) : effectiveGravity(s.cfg, level)
 
   s.gravityAcc += rate
   while (s.gravityAcc >= 1) {

@@ -4,7 +4,7 @@ export { COLS, ROWS, VISIBLE_ROWS, TOP_VISIBLE_ROW, TICK_HZ, MAX_TICKS_PER_FRAME
 export { KINDS } from './types'
 export { kindCode, kindOfCode, dropDistance } from './board'
 export { shapeOf, SHAPES } from './pieces'
-export { gravityCellsPerTick } from './timing'
+export { gravityCellsPerTick, effectiveGravity, effectiveSoftDrop } from './timing'
 export type {
   Action,
   Active,

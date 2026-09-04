@@ -3,6 +3,7 @@ import {
   drainEvents,
   reduce,
   type Command,
+  type Config,
   type GameEvent,
   type GameState,
 } from '../engine'
@@ -30,12 +31,12 @@ export interface Session {
   tick(): readonly GameEvent[]
   subscribe(fn: SessionListener): () => void
   getReplay(): Replay
-  restart(seed?: number): void
+  restart(seed?: number, cfg?: Partial<Config>): void
 }
 
-export function createSession(seed: number): Session {
-  let state = createGame(seed)
-  let recorder = createRecorder(seed)
+export function createSession(seed: number, cfg?: Partial<Config>): Session {
+  let state = createGame(seed, cfg)
+  let recorder = createRecorder(seed, state.cfg)
   let queue: Command[] = []
   const listeners = new Set<SessionListener>()
 
@@ -66,11 +67,11 @@ export function createSession(seed: number): Session {
     getReplay() {
       return recorder.snapshot()
     },
-    restart(nextSeed = Date.now() >>> 0) {
+    restart(nextSeed = Date.now() >>> 0, nextCfg = cfg) {
       // `Date.now` lives HERE, outside the engine, and only to pick a seed. The
       // engine still never reads a clock (invariant #1).
-      state = createGame(nextSeed)
-      recorder = createRecorder(nextSeed)
+      state = createGame(nextSeed, nextCfg)
+      recorder = createRecorder(nextSeed, state.cfg)
       queue = []
     },
   }

@@ -17,6 +17,7 @@ export type IconName =
   | 'hold'
   | 'restart'
   | 'arrowUp'
+  | 'close'
 
 const PATHS: Record<IconName, { d: string; filled?: boolean }> = {
   pause: { d: 'M6 4h4v16H6zM14 4h4v16h-4z', filled: true },
@@ -33,6 +34,7 @@ const PATHS: Record<IconName, { d: string; filled?: boolean }> = {
   hold: { d: 'M3 4h18v5H3zM5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4' },
   restart: { d: 'M2 5v6h6M4.5 15a8.5 8.5 0 1 0 2-8.8L2 11' },
   arrowUp: { d: 'M12 19V5M5 12l7-7 7 7' },
+  close: { d: 'M18 6 6 18M6 6l12 12' },
 }
 
 export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {

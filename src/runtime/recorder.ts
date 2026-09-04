@@ -1,4 +1,4 @@
-import type { Command } from '../engine'
+import type { Command, Config } from '../engine'
 
 /**
  * Replay recording (FR-18).
@@ -18,17 +18,24 @@ export interface ReplayEntry {
 
 export interface Replay {
   readonly seed: number
+  /**
+   * The config the game was played under. Once the fall speed became a setting,
+   * `{seed, commands}` stopped describing a game on its own -- the same inputs under
+   * a different speed produce a different board (ADR-0013).
+   */
+  readonly cfg: Config
   readonly entries: readonly ReplayEntry[]
 }
 
 export interface Recorder {
   record(tick: number, cmds: readonly Command[]): void
   snapshot(): Replay
-  reset(seed: number): void
+  reset(seed: number, cfg: Config): void
 }
 
-export function createRecorder(seed: number): Recorder {
+export function createRecorder(seed: number, cfg: Config): Recorder {
   let currentSeed = seed
+  let currentCfg = cfg
   let entries: ReplayEntry[] = []
   return {
     record(tick, cmds) {
@@ -38,10 +45,11 @@ export function createRecorder(seed: number): Recorder {
       }
     },
     snapshot() {
-      return { seed: currentSeed, entries: entries.slice() }
+      return { seed: currentSeed, cfg: { ...currentCfg }, entries: entries.slice() }
     },
-    reset(nextSeed) {
+    reset(nextSeed, nextCfg) {
       currentSeed = nextSeed
+      currentCfg = nextCfg
       entries = []
     },
   }

@@ -85,6 +85,20 @@ export interface Stats {
 }
 
 export interface Config {
+  /**
+   * Multiplier on the level-based gravity curve, for the difficulty presets. 1 keeps
+   * the Guideline curve exactly.
+   */
+  gravityScale: number
+  /**
+   * A flat fall speed in cells per second that REPLACES the level curve, for a
+   * player-chosen speed. `null` means the curve applies.
+   *
+   * Both of these are part of `Config` and therefore part of what a replay needs:
+   * `{seed, commands}` alone stopped being enough to reproduce a game the moment the
+   * fall speed became something a player could change (ADR-0013).
+   */
+  fixedCellsPerSecond: number | null
   lockDelay: number
   moveResetMax: number
   clearDelay: number
